@@ -1,0 +1,2 @@
+import {NextResponse} from 'next/server';import {syncTrackedAircraft} from '@/lib/aviation';
+export async function GET(req:Request){if(process.env.CRON_SECRET&&req.headers.get('authorization')!==`Bearer ${process.env.CRON_SECRET}`)return new Response('Unauthorized',{status:401});try{return NextResponse.json(await syncTrackedAircraft())}catch(e){return NextResponse.json({error:e instanceof Error?e.message:'Aviation sync failed'},{status:500})}}

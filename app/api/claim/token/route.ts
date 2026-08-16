@@ -1,0 +1,2 @@
+import {NextRequest,NextResponse} from 'next/server';import {db} from '@/lib/prisma';
+export async function GET(req:NextRequest){const token=req.nextUrl.searchParams.get('token');if(!token)return NextResponse.json({error:'Token required'},{status:400});const c=await db.claim.findUnique({where:{token},include:{operator:{include:{aircraft:true}}}});if(!c||c.expiresAt<new Date()||c.status!=='PENDING')return NextResponse.json({error:'Invalid or expired invitation'},{status:400});return NextResponse.json({claimId:c.id,operator:c.operator})}

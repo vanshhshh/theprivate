@@ -1,0 +1,2 @@
+import {NextRequest,NextResponse} from 'next/server';import {db} from '@/lib/prisma';
+export async function GET(req:NextRequest){const reg=req.nextUrl.searchParams.get('registration');const where:any=reg?{aircraft:{registration:reg}}:{};const rows=await db.flightPosition.findMany({where,include:{aircraft:{include:{operator:true}}},orderBy:{observedAt:'desc'},take:100});const latest=new Map<string,any>();for(const x of rows)if(!latest.has(x.aircraftId))latest.set(x.aircraftId,x);return NextResponse.json({positions:[...latest.values()]})}

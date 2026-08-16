@@ -1,0 +1,278 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+enum Role {
+  CUSTOMER
+  OPERATOR
+  ADMIN
+}
+
+enum ClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BookingStatus {
+  REQUESTED
+  QUOTED
+  OPERATOR_REVIEW
+  OPERATOR_CONFIRMED
+  PAYMENT_PENDING
+  PAID
+  CONFIRMED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+enum AvailabilityStatus {
+  DRAFT
+  ACTIVE
+  PUBLISHED
+  HELD
+  BOOKED
+  EXPIRED
+  CANCELLED
+}
+
+enum NotificationType {
+  BOOKING
+  RFQ
+  CLAIM
+  SYSTEM
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  role          Role           @default(CUSTOMER)
+  operator      Operator?      @relation(fields: [operatorId], references: [id])
+  operatorId    String?        @unique
+  claims        Claim[]
+  rfqs          Rfq[]
+  bookings      Booking[]
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Operator {
+  id                      String           @id @default(cuid())
+  dgcaId                  Int              @unique
+  name                    String
+  aopNumber               String?
+  phone                   String?
+  email                   String?
+  website                 String?
+  address                 String?
+  priority                String?
+  charterBusiness         String?
+  privateJetRelevance     String?
+  internationalCapability String?
+  operatorType            String?
+  estimatedActivity       String?
+  revenueFy25             String?
+  instagram               String?
+  linkedin                String?
+  decisionMaker           String?
+  decisionMakerTitle      String?
+  decisionMakerContact    String?
+  claimed                 Boolean          @default(false)
+  verified                Boolean          @default(false)
+  active                  Boolean          @default(true)
+  user                    User?
+  aircraft                Aircraft[]
+  claims                  Claim[]
+  availability            Availability[]
+  quotes                  Quote[]
+  bookings                Booking[]
+  bookingEvents           BookingEvent[]
+  pricing                 OperatorPricing?
+  notifications           Notification[]
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+}
+
+model Aircraft {
+  id             String           @id @default(cuid())
+  operatorId     String
+  operator       Operator         @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  registration   String           @unique
+  type           String?
+  model          String?
+  seats          Int?
+  icao24         String?
+  verified       Boolean          @default(false)
+  active         Boolean          @default(true)
+  hourlyRate     Int?
+  minHours       Float?
+  operatorBuffer Int              @default(0)
+  availability   Availability[]
+  positions      FlightPosition[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  quotes         Quote[]
+  bookings       Booking[]
+}
+
+model OperatorPricing {
+  id                    String   @id @default(cuid())
+  operatorId            String   @unique
+  operator              Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  defaultHourlyRate     Int      @default(0)
+  defaultMinHours       Float    @default(2)
+  domesticHandling      Int      @default(0)
+  internationalHandling Int      @default(0)
+  crewDaily             Int      @default(0)
+  fuelSurchargePercent  Float    @default(0)
+  operatorBuffer        Int      @default(0)
+  platformMarkupPercent Float    @default(8)
+  minQuote              Int      @default(0)
+  updatedAt             DateTime @updatedAt
+}
+
+model Claim {
+  id         String      @id @default(cuid())
+  operatorId String
+  userId     String?
+  status     ClaimStatus @default(PENDING)
+  token      String      @unique
+  expiresAt  DateTime
+  operator   Operator    @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime    @default(now())
+}
+
+model Availability {
+  id          String             @id @default(cuid())
+  operatorId  String
+  aircraftId  String
+  origin      String
+  destination String
+  departureAt DateTime
+  price       Int
+  seats       Int
+  status      AvailabilityStatus @default(ACTIVE)
+  emptyLeg    Boolean            @default(false)
+  operator    Operator           @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  aircraft    Aircraft           @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  bookings    Booking[]
+  createdAt   DateTime           @default(now())
+}
+
+model Rfq {
+  id          String   @id @default(cuid())
+  userId      String
+  origin      String
+  destination String
+  departureAt DateTime
+  passengers  Int
+  notes       String?
+  status      String   @default("OPEN")
+  user        User     @relation(fields: [userId], references: [id])
+  quotes      Quote[]
+  createdAt   DateTime @default(now())
+}
+
+model Quote {
+  id         String    @id @default(cuid())
+  rfqId      String
+  operatorId String
+  aircraftId String?
+  price      Int
+  currency   String    @default("INR")
+  validUntil DateTime
+  status     String    @default("ACTIVE")
+  rfq        Rfq       @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  operator   Operator  @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  aircraft   Aircraft? @relation(fields: [aircraftId], references: [id])
+  createdAt  DateTime  @default(now())
+  bookings   Booking[]
+}
+
+model Booking {
+  id             String         @id @default(cuid())
+  userId         String
+  operatorId     String
+  aircraftId     String?
+  availabilityId String?
+  rfqId          String?
+  quoteId        String?
+  origin         String
+  destination    String
+  departureAt    DateTime
+  passengers     Int
+  price          Int
+  currency       String         @default("INR")
+  status         BookingStatus  @default(REQUESTED)
+  paymentRef     String?
+  user           User           @relation(fields: [userId], references: [id])
+  operator       Operator       @relation(fields: [operatorId], references: [id])
+  aircraft       Aircraft?      @relation(fields: [aircraftId], references: [id])
+  availability   Availability?  @relation(fields: [availabilityId], references: [id])
+  quote          Quote?         @relation(fields: [quoteId], references: [id])
+  events         BookingEvent[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model BookingEvent {
+  id          String         @id @default(cuid())
+  bookingId   String
+  booking     Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fromStatus  BookingStatus?
+  toStatus    BookingStatus
+  actorUserId String?
+  actorRole   Role?
+  note        String?
+  createdAt   DateTime       @default(now())
+  operatorId  String?
+  operator    Operator?      @relation(fields: [operatorId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId, createdAt])
+  @@index([operatorId, createdAt])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  type       NotificationType
+  title      String
+  body       String
+  userId     String?
+  operatorId String?
+  readAt     DateTime?
+  user       User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  operator   Operator?        @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  createdAt  DateTime         @default(now())
+}
+
+model FlightPosition {
+  id         String   @id @default(cuid())
+  aircraftId String
+  aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  provider   String
+  icao24     String
+  callsign   String?
+  latitude   Float?
+  longitude  Float?
+  altitude   Float?
+  velocity   Float?
+  heading    Float?
+  onGround   Boolean  @default(false)
+  observedAt DateTime
+  raw        Json?
+  createdAt  DateTime @default(now())
+
+  @@index([aircraftId, observedAt])
+  @@index([icao24, observedAt])
+}

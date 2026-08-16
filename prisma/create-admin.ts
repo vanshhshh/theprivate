@@ -1,0 +1,3 @@
+import "dotenv/config";import {PrismaPg} from '@prisma/adapter-pg';import {PrismaClient} from '../app/generated/prisma/client';import bcrypt from 'bcryptjs';
+const db=new PrismaClient({adapter:new PrismaPg({connectionString:process.env.DIRECT_URL||process.env.DATABASE_URL!})});
+async function main(){const email=process.env.ADMIN_EMAIL, password=process.env.ADMIN_PASSWORD;if(!email||!password)throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD required');await db.user.upsert({where:{email:email.toLowerCase()},update:{role:'ADMIN',passwordHash:await bcrypt.hash(password,12)},create:{email:email.toLowerCase(),name:'Admin',passwordHash:await bcrypt.hash(password,12),role:'ADMIN'}});console.log('Admin ready:',email)}main().finally(()=>db.$disconnect());

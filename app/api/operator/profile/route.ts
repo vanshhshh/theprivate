@@ -1,0 +1,2 @@
+import {NextRequest,NextResponse} from 'next/server';import {db} from '@/lib/prisma';import {requireUser,errorResponse} from '@/lib/api';
+export async function GET(req:NextRequest){try{const u=await requireUser(req);if(!u.operatorId)return NextResponse.json({operator:null});const op=await db.operator.findUnique({where:{id:u.operatorId},include:{aircraft:true,availability:true,pricing:true}});return NextResponse.json({operator:op})}catch(e){return errorResponse(e)}}
