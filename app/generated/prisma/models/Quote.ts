@@ -42,7 +42,7 @@ export type QuoteMinAggregateOutputType = {
   price: number | null
   currency: string | null
   validUntil: Date | null
-  status: string | null
+  status: $Enums.QuoteStatus | null
   createdAt: Date | null
 }
 
@@ -54,7 +54,7 @@ export type QuoteMaxAggregateOutputType = {
   price: number | null
   currency: string | null
   validUntil: Date | null
-  status: string | null
+  status: $Enums.QuoteStatus | null
   createdAt: Date | null
 }
 
@@ -211,7 +211,7 @@ export type QuoteGroupByOutputType = {
   price: number
   currency: string
   validUntil: Date
-  status: string
+  status: $Enums.QuoteStatus
   createdAt: Date
   _count: QuoteCountAggregateOutputType | null
   _avg: QuoteAvgAggregateOutputType | null
@@ -246,7 +246,7 @@ export type QuoteWhereInput = {
   price?: Prisma.IntFilter<"Quote"> | number
   currency?: Prisma.StringFilter<"Quote"> | string
   validUntil?: Prisma.DateTimeFilter<"Quote"> | Date | string
-  status?: Prisma.StringFilter<"Quote"> | string
+  status?: Prisma.EnumQuoteStatusFilter<"Quote"> | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFilter<"Quote"> | Date | string
   rfq?: Prisma.XOR<Prisma.RfqScalarRelationFilter, Prisma.RfqWhereInput>
   operator?: Prisma.XOR<Prisma.OperatorScalarRelationFilter, Prisma.OperatorWhereInput>
@@ -281,7 +281,7 @@ export type QuoteWhereUniqueInput = Prisma.AtLeast<{
   price?: Prisma.IntFilter<"Quote"> | number
   currency?: Prisma.StringFilter<"Quote"> | string
   validUntil?: Prisma.DateTimeFilter<"Quote"> | Date | string
-  status?: Prisma.StringFilter<"Quote"> | string
+  status?: Prisma.EnumQuoteStatusFilter<"Quote"> | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFilter<"Quote"> | Date | string
   rfq?: Prisma.XOR<Prisma.RfqScalarRelationFilter, Prisma.RfqWhereInput>
   operator?: Prisma.XOR<Prisma.OperatorScalarRelationFilter, Prisma.OperatorWhereInput>
@@ -317,7 +317,7 @@ export type QuoteScalarWhereWithAggregatesInput = {
   price?: Prisma.IntWithAggregatesFilter<"Quote"> | number
   currency?: Prisma.StringWithAggregatesFilter<"Quote"> | string
   validUntil?: Prisma.DateTimeWithAggregatesFilter<"Quote"> | Date | string
-  status?: Prisma.StringWithAggregatesFilter<"Quote"> | string
+  status?: Prisma.EnumQuoteStatusWithAggregatesFilter<"Quote"> | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Quote"> | Date | string
 }
 
@@ -326,7 +326,7 @@ export type QuoteCreateInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
   rfq: Prisma.RfqCreateNestedOneWithoutQuotesInput
   operator: Prisma.OperatorCreateNestedOneWithoutQuotesInput
@@ -342,7 +342,7 @@ export type QuoteUncheckedCreateInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutQuoteInput
 }
@@ -352,7 +352,7 @@ export type QuoteUpdateInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   rfq?: Prisma.RfqUpdateOneRequiredWithoutQuotesNestedInput
   operator?: Prisma.OperatorUpdateOneRequiredWithoutQuotesNestedInput
@@ -368,7 +368,7 @@ export type QuoteUncheckedUpdateInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutQuoteNestedInput
 }
@@ -381,7 +381,7 @@ export type QuoteCreateManyInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
 }
 
@@ -390,7 +390,7 @@ export type QuoteUpdateManyMutationInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -402,7 +402,7 @@ export type QuoteUncheckedUpdateManyInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -591,6 +591,10 @@ export type QuoteUncheckedUpdateManyWithoutRfqNestedInput = {
   deleteMany?: Prisma.QuoteScalarWhereInput | Prisma.QuoteScalarWhereInput[]
 }
 
+export type EnumQuoteStatusFieldUpdateOperationsInput = {
+  set?: $Enums.QuoteStatus
+}
+
 export type QuoteCreateNestedOneWithoutBookingsInput = {
   create?: Prisma.XOR<Prisma.QuoteCreateWithoutBookingsInput, Prisma.QuoteUncheckedCreateWithoutBookingsInput>
   connectOrCreate?: Prisma.QuoteCreateOrConnectWithoutBookingsInput
@@ -612,7 +616,7 @@ export type QuoteCreateWithoutOperatorInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
   rfq: Prisma.RfqCreateNestedOneWithoutQuotesInput
   aircraft?: Prisma.AircraftCreateNestedOneWithoutQuotesInput
@@ -626,7 +630,7 @@ export type QuoteUncheckedCreateWithoutOperatorInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutQuoteInput
 }
@@ -668,7 +672,7 @@ export type QuoteScalarWhereInput = {
   price?: Prisma.IntFilter<"Quote"> | number
   currency?: Prisma.StringFilter<"Quote"> | string
   validUntil?: Prisma.DateTimeFilter<"Quote"> | Date | string
-  status?: Prisma.StringFilter<"Quote"> | string
+  status?: Prisma.EnumQuoteStatusFilter<"Quote"> | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFilter<"Quote"> | Date | string
 }
 
@@ -677,7 +681,7 @@ export type QuoteCreateWithoutAircraftInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
   rfq: Prisma.RfqCreateNestedOneWithoutQuotesInput
   operator: Prisma.OperatorCreateNestedOneWithoutQuotesInput
@@ -691,7 +695,7 @@ export type QuoteUncheckedCreateWithoutAircraftInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutQuoteInput
 }
@@ -727,7 +731,7 @@ export type QuoteCreateWithoutRfqInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
   operator: Prisma.OperatorCreateNestedOneWithoutQuotesInput
   aircraft?: Prisma.AircraftCreateNestedOneWithoutQuotesInput
@@ -741,7 +745,7 @@ export type QuoteUncheckedCreateWithoutRfqInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutQuoteInput
 }
@@ -777,7 +781,7 @@ export type QuoteCreateWithoutBookingsInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
   rfq: Prisma.RfqCreateNestedOneWithoutQuotesInput
   operator: Prisma.OperatorCreateNestedOneWithoutQuotesInput
@@ -792,7 +796,7 @@ export type QuoteUncheckedCreateWithoutBookingsInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
 }
 
@@ -817,7 +821,7 @@ export type QuoteUpdateWithoutBookingsInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   rfq?: Prisma.RfqUpdateOneRequiredWithoutQuotesNestedInput
   operator?: Prisma.OperatorUpdateOneRequiredWithoutQuotesNestedInput
@@ -832,7 +836,7 @@ export type QuoteUncheckedUpdateWithoutBookingsInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -843,7 +847,7 @@ export type QuoteCreateManyOperatorInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
 }
 
@@ -852,7 +856,7 @@ export type QuoteUpdateWithoutOperatorInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   rfq?: Prisma.RfqUpdateOneRequiredWithoutQuotesNestedInput
   aircraft?: Prisma.AircraftUpdateOneWithoutQuotesNestedInput
@@ -866,7 +870,7 @@ export type QuoteUncheckedUpdateWithoutOperatorInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutQuoteNestedInput
 }
@@ -878,7 +882,7 @@ export type QuoteUncheckedUpdateManyWithoutOperatorInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -889,7 +893,7 @@ export type QuoteCreateManyAircraftInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
 }
 
@@ -898,7 +902,7 @@ export type QuoteUpdateWithoutAircraftInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   rfq?: Prisma.RfqUpdateOneRequiredWithoutQuotesNestedInput
   operator?: Prisma.OperatorUpdateOneRequiredWithoutQuotesNestedInput
@@ -912,7 +916,7 @@ export type QuoteUncheckedUpdateWithoutAircraftInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutQuoteNestedInput
 }
@@ -924,7 +928,7 @@ export type QuoteUncheckedUpdateManyWithoutAircraftInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -935,7 +939,7 @@ export type QuoteCreateManyRfqInput = {
   price: number
   currency?: string
   validUntil: Date | string
-  status?: string
+  status?: $Enums.QuoteStatus
   createdAt?: Date | string
 }
 
@@ -944,7 +948,7 @@ export type QuoteUpdateWithoutRfqInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   operator?: Prisma.OperatorUpdateOneRequiredWithoutQuotesNestedInput
   aircraft?: Prisma.AircraftUpdateOneWithoutQuotesNestedInput
@@ -958,7 +962,7 @@ export type QuoteUncheckedUpdateWithoutRfqInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutQuoteNestedInput
 }
@@ -970,7 +974,7 @@ export type QuoteUncheckedUpdateManyWithoutRfqInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1099,7 +1103,7 @@ export type $QuotePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     price: number
     currency: string
     validUntil: Date
-    status: string
+    status: $Enums.QuoteStatus
     createdAt: Date
   }, ExtArgs["result"]["quote"]>
   composites: {}
@@ -1535,7 +1539,7 @@ export interface QuoteFieldRefs {
   readonly price: Prisma.FieldRef<"Quote", 'Int'>
   readonly currency: Prisma.FieldRef<"Quote", 'String'>
   readonly validUntil: Prisma.FieldRef<"Quote", 'DateTime'>
-  readonly status: Prisma.FieldRef<"Quote", 'String'>
+  readonly status: Prisma.FieldRef<"Quote", 'QuoteStatus'>
   readonly createdAt: Prisma.FieldRef<"Quote", 'DateTime'>
 }
     

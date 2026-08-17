@@ -32,16 +32,22 @@ const initialPricing: Pricing = {
 export default function Dashboard() {
   const router = useRouter();
   const [data, setData] = useState<any>(null);
+  const [metrics, setMetrics] = useState<any>(null);
   const [pricing, setPricing] = useState<Pricing>(initialPricing);
   const [message, setMessage] = useState("");
 
   async function load() {
-    const profile = await fetch("/api/operator/profile").then((res) => res.json());
-    setData(profile);
-    if (profile.operator) {
-      const pricingResponse = await fetch("/api/operator/pricing").then((res) => res.json());
-      if (pricingResponse.pricing) setPricing(pricingResponse.pricing);
-    }
+    const [profileRes, metricsRes, pricingRes] = await Promise.all([
+      fetch("/api/operator/profile"),
+      fetch("/api/operator/metrics"),
+      fetch("/api/operator/pricing"),
+    ]);
+    const profileJson = await profileRes.json();
+    const metricsJson = await metricsRes.json();
+    const pricingJson = await pricingRes.json();
+    setData(profileJson);
+    if (metricsJson.metrics) setMetrics(metricsJson.metrics);
+    if (pricingJson.pricing) setPricing(pricingJson.pricing);
   }
 
   useEffect(() => {
@@ -62,7 +68,7 @@ export default function Dashboard() {
     router.push("/");
   }
 
-  if (!data) return <main><div className="shell section">Loading...</div></main>;
+  if (!data || !metrics) return <main><div className="shell section">Loading...</div></main>;
   const operator = data.operator;
   if (!operator) {
     return (
@@ -81,8 +87,8 @@ export default function Dashboard() {
     );
   }
 
-  const pendingAircraft = operator.aircraft.filter((aircraft: any) => !aircraft.verified).length;
-  const activeAircraft = operator.aircraft.filter((aircraft: any) => aircraft.active).length;
+  const pendingAircraft = metrics.fleet.pending;
+  const activeAircraft = metrics.fleet.active;
 
   return (
     <main>
@@ -98,9 +104,21 @@ export default function Dashboard() {
           </div>
 
           <div className="actionStrip">
-            <div><span className="microLabel">TODAY</span><h3>Booking requests</h3><b>{operator.bookings?.length || 0}</b></div>
-            <div><span className="microLabel">FLEET</span><h3>Awaiting verification</h3><b>{pendingAircraft}</b></div>
-            <div><span className="microLabel">AIRCRAFT</span><h3>Active aircraft</h3><b>{activeAircraft}</b></div>
+            <div>
+              <span className="microLabel">TODAY</span>
+              <h3>Booking requests</h3>
+              <b>{metrics.bookings.pending}</b>
+            </div>
+            <div>
+              <span className="microLabel">FLEET</span>
+              <h3>Awaiting verification</h3>
+              <b>{pendingAircraft}</b>
+            </div>
+            <div>
+              <span className="microLabel">AIRCRAFT</span>
+              <h3>Active aircraft</h3>
+              <b>{activeAircraft}</b>
+            </div>
           </div>
 
           <div className="operatorGrid">
@@ -234,7 +252,10 @@ function Availability({ aircraft }: { aircraft: any[] }) {
 function Bookings() {
   const [bookings, setBookings] = useState<any[]>([]);
   useEffect(() => {
-    fetch("/api/bookings").then((res) => res.json()).then((json) => setBookings(json.bookings || []));
+    fetch("/api/bookings").then((res) => res.json()).then((json) => {
+      const filtered = (json.bookings || []).filter((b: any) => b.status === "REQUESTED");
+      setBookings(filtered);
+    });
   }, []);
 
   async function confirm(id: string) {

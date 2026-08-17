@@ -1,5 +1,6 @@
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
+import { getCurrentUser, publicUser } from "@/lib/auth";
 
 export const metadata = {
   title: "ThePrivate - Private Aviation, Simplified",
@@ -7,11 +8,14 @@ export const metadata = {
   alternates: { canonical: "https://theprivate.in" },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser();
+  const initialUser = publicUser(user);
+
   return (
     <html lang="en">
       <body>
-        <AppShell>{children}</AppShell>
+        <AppShell initialUser={initialUser}>{children}</AppShell>
       </body>
     </html>
   );

@@ -3,6 +3,7 @@ import { db } from "@/lib/prisma";
 import { errorResponse, nonNegativeNumber, readJson, requiredString, requireOperator } from "@/lib/api";
 import { notifyUser } from "@/lib/notifications";
 import { calculateAircraftPrice } from "@/lib/pricing";
+import { QuoteStatus, RfqStatus } from "@/app/generated/prisma/enums";
 
 export async function GET(req: NextRequest) {
   try {
@@ -53,9 +54,10 @@ export async function POST(req: NextRequest) {
         aircraftId: aircraft.id,
         price,
         validUntil,
+        status: QuoteStatus.ACTIVE,
       },
     });
-    await db.rfq.update({ where: { id: rfq.id }, data: { status: "QUOTED" } });
+    await db.rfq.update({ where: { id: rfq.id }, data: { status: RfqStatus.QUOTED } });
     await notifyUser(rfq.userId, "New charter quote", `A new quote is available for ${rfq.origin} to ${rfq.destination}.`, "RFQ");
     return NextResponse.json({ quote });
   } catch (error) {

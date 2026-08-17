@@ -62,7 +62,8 @@ export const ModelName = {
   Booking: 'Booking',
   BookingEvent: 'BookingEvent',
   Notification: 'Notification',
-  FlightPosition: 'FlightPosition'
+  FlightPosition: 'FlightPosition',
+  Airport: 'Airport'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -295,6 +296,25 @@ export const FlightPositionScalarFieldEnum = {
 } as const
 
 export type FlightPositionScalarFieldEnum = (typeof FlightPositionScalarFieldEnum)[keyof typeof FlightPositionScalarFieldEnum]
+
+
+export const AirportScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  city: 'city',
+  country: 'country',
+  iata: 'iata',
+  icao: 'icao',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  timezone: 'timezone',
+  privateJetRelevance: 'privateJetRelevance',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AirportScalarFieldEnum = (typeof AirportScalarFieldEnum)[keyof typeof AirportScalarFieldEnum]
 
 
 export const SortOrder = {

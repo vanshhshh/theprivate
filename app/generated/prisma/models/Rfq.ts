@@ -42,7 +42,7 @@ export type RfqMinAggregateOutputType = {
   departureAt: Date | null
   passengers: number | null
   notes: string | null
-  status: string | null
+  status: $Enums.RfqStatus | null
   createdAt: Date | null
 }
 
@@ -54,7 +54,7 @@ export type RfqMaxAggregateOutputType = {
   departureAt: Date | null
   passengers: number | null
   notes: string | null
-  status: string | null
+  status: $Enums.RfqStatus | null
   createdAt: Date | null
 }
 
@@ -211,7 +211,7 @@ export type RfqGroupByOutputType = {
   departureAt: Date
   passengers: number
   notes: string | null
-  status: string
+  status: $Enums.RfqStatus
   createdAt: Date
   _count: RfqCountAggregateOutputType | null
   _avg: RfqAvgAggregateOutputType | null
@@ -246,7 +246,7 @@ export type RfqWhereInput = {
   departureAt?: Prisma.DateTimeFilter<"Rfq"> | Date | string
   passengers?: Prisma.IntFilter<"Rfq"> | number
   notes?: Prisma.StringNullableFilter<"Rfq"> | string | null
-  status?: Prisma.StringFilter<"Rfq"> | string
+  status?: Prisma.EnumRfqStatusFilter<"Rfq"> | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFilter<"Rfq"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   quotes?: Prisma.QuoteListRelationFilter
@@ -277,7 +277,7 @@ export type RfqWhereUniqueInput = Prisma.AtLeast<{
   departureAt?: Prisma.DateTimeFilter<"Rfq"> | Date | string
   passengers?: Prisma.IntFilter<"Rfq"> | number
   notes?: Prisma.StringNullableFilter<"Rfq"> | string | null
-  status?: Prisma.StringFilter<"Rfq"> | string
+  status?: Prisma.EnumRfqStatusFilter<"Rfq"> | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFilter<"Rfq"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   quotes?: Prisma.QuoteListRelationFilter
@@ -311,7 +311,7 @@ export type RfqScalarWhereWithAggregatesInput = {
   departureAt?: Prisma.DateTimeWithAggregatesFilter<"Rfq"> | Date | string
   passengers?: Prisma.IntWithAggregatesFilter<"Rfq"> | number
   notes?: Prisma.StringNullableWithAggregatesFilter<"Rfq"> | string | null
-  status?: Prisma.StringWithAggregatesFilter<"Rfq"> | string
+  status?: Prisma.EnumRfqStatusWithAggregatesFilter<"Rfq"> | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Rfq"> | Date | string
 }
 
@@ -322,7 +322,7 @@ export type RfqCreateInput = {
   departureAt: Date | string
   passengers: number
   notes?: string | null
-  status?: string
+  status?: $Enums.RfqStatus
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutRfqsInput
   quotes?: Prisma.QuoteCreateNestedManyWithoutRfqInput
@@ -336,7 +336,7 @@ export type RfqUncheckedCreateInput = {
   departureAt: Date | string
   passengers: number
   notes?: string | null
-  status?: string
+  status?: $Enums.RfqStatus
   createdAt?: Date | string
   quotes?: Prisma.QuoteUncheckedCreateNestedManyWithoutRfqInput
 }
@@ -348,7 +348,7 @@ export type RfqUpdateInput = {
   departureAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passengers?: Prisma.IntFieldUpdateOperationsInput | number
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRfqStatusFieldUpdateOperationsInput | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutRfqsNestedInput
   quotes?: Prisma.QuoteUpdateManyWithoutRfqNestedInput
@@ -362,7 +362,7 @@ export type RfqUncheckedUpdateInput = {
   departureAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passengers?: Prisma.IntFieldUpdateOperationsInput | number
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRfqStatusFieldUpdateOperationsInput | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   quotes?: Prisma.QuoteUncheckedUpdateManyWithoutRfqNestedInput
 }
@@ -375,7 +375,7 @@ export type RfqCreateManyInput = {
   departureAt: Date | string
   passengers: number
   notes?: string | null
-  status?: string
+  status?: $Enums.RfqStatus
   createdAt?: Date | string
 }
 
@@ -386,7 +386,7 @@ export type RfqUpdateManyMutationInput = {
   departureAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passengers?: Prisma.IntFieldUpdateOperationsInput | number
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRfqStatusFieldUpdateOperationsInput | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -398,7 +398,7 @@ export type RfqUncheckedUpdateManyInput = {
   departureAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passengers?: Prisma.IntFieldUpdateOperationsInput | number
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRfqStatusFieldUpdateOperationsInput | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -503,6 +503,10 @@ export type RfqUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.RfqScalarWhereInput | Prisma.RfqScalarWhereInput[]
 }
 
+export type EnumRfqStatusFieldUpdateOperationsInput = {
+  set?: $Enums.RfqStatus
+}
+
 export type RfqCreateNestedOneWithoutQuotesInput = {
   create?: Prisma.XOR<Prisma.RfqCreateWithoutQuotesInput, Prisma.RfqUncheckedCreateWithoutQuotesInput>
   connectOrCreate?: Prisma.RfqCreateOrConnectWithoutQuotesInput
@@ -524,7 +528,7 @@ export type RfqCreateWithoutUserInput = {
   departureAt: Date | string
   passengers: number
   notes?: string | null
-  status?: string
+  status?: $Enums.RfqStatus
   createdAt?: Date | string
   quotes?: Prisma.QuoteCreateNestedManyWithoutRfqInput
 }
@@ -536,7 +540,7 @@ export type RfqUncheckedCreateWithoutUserInput = {
   departureAt: Date | string
   passengers: number
   notes?: string | null
-  status?: string
+  status?: $Enums.RfqStatus
   createdAt?: Date | string
   quotes?: Prisma.QuoteUncheckedCreateNestedManyWithoutRfqInput
 }
@@ -578,7 +582,7 @@ export type RfqScalarWhereInput = {
   departureAt?: Prisma.DateTimeFilter<"Rfq"> | Date | string
   passengers?: Prisma.IntFilter<"Rfq"> | number
   notes?: Prisma.StringNullableFilter<"Rfq"> | string | null
-  status?: Prisma.StringFilter<"Rfq"> | string
+  status?: Prisma.EnumRfqStatusFilter<"Rfq"> | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFilter<"Rfq"> | Date | string
 }
 
@@ -589,7 +593,7 @@ export type RfqCreateWithoutQuotesInput = {
   departureAt: Date | string
   passengers: number
   notes?: string | null
-  status?: string
+  status?: $Enums.RfqStatus
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutRfqsInput
 }
@@ -602,7 +606,7 @@ export type RfqUncheckedCreateWithoutQuotesInput = {
   departureAt: Date | string
   passengers: number
   notes?: string | null
-  status?: string
+  status?: $Enums.RfqStatus
   createdAt?: Date | string
 }
 
@@ -629,7 +633,7 @@ export type RfqUpdateWithoutQuotesInput = {
   departureAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passengers?: Prisma.IntFieldUpdateOperationsInput | number
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRfqStatusFieldUpdateOperationsInput | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutRfqsNestedInput
 }
@@ -642,7 +646,7 @@ export type RfqUncheckedUpdateWithoutQuotesInput = {
   departureAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passengers?: Prisma.IntFieldUpdateOperationsInput | number
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRfqStatusFieldUpdateOperationsInput | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -653,7 +657,7 @@ export type RfqCreateManyUserInput = {
   departureAt: Date | string
   passengers: number
   notes?: string | null
-  status?: string
+  status?: $Enums.RfqStatus
   createdAt?: Date | string
 }
 
@@ -664,7 +668,7 @@ export type RfqUpdateWithoutUserInput = {
   departureAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passengers?: Prisma.IntFieldUpdateOperationsInput | number
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRfqStatusFieldUpdateOperationsInput | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   quotes?: Prisma.QuoteUpdateManyWithoutRfqNestedInput
 }
@@ -676,7 +680,7 @@ export type RfqUncheckedUpdateWithoutUserInput = {
   departureAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passengers?: Prisma.IntFieldUpdateOperationsInput | number
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRfqStatusFieldUpdateOperationsInput | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   quotes?: Prisma.QuoteUncheckedUpdateManyWithoutRfqNestedInput
 }
@@ -688,7 +692,7 @@ export type RfqUncheckedUpdateManyWithoutUserInput = {
   departureAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passengers?: Prisma.IntFieldUpdateOperationsInput | number
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRfqStatusFieldUpdateOperationsInput | $Enums.RfqStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -803,7 +807,7 @@ export type $RfqPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
     departureAt: Date
     passengers: number
     notes: string | null
-    status: string
+    status: $Enums.RfqStatus
     createdAt: Date
   }, ExtArgs["result"]["rfq"]>
   composites: {}
@@ -1237,7 +1241,7 @@ export interface RfqFieldRefs {
   readonly departureAt: Prisma.FieldRef<"Rfq", 'DateTime'>
   readonly passengers: Prisma.FieldRef<"Rfq", 'Int'>
   readonly notes: Prisma.FieldRef<"Rfq", 'String'>
-  readonly status: Prisma.FieldRef<"Rfq", 'String'>
+  readonly status: Prisma.FieldRef<"Rfq", 'RfqStatus'>
   readonly createdAt: Prisma.FieldRef<"Rfq", 'DateTime'>
 }
     

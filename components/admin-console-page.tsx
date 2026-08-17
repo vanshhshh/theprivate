@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/prisma";
+import { BookingStatus, QuoteStatus, RfqStatus } from "@/app/generated/prisma/enums";
 
 type AdminDataset = "aircraft" | "claims" | "rfqs" | "quotes" | "bookings" | "users" | "availability" | "aviation" | "audit";
 
@@ -18,22 +19,22 @@ export async function AdminConsolePage({ dataset }: { dataset: AdminDataset }) {
 
   if (dataset === "claims") {
     const rows = await db.claim.findMany({ include: { operator: true, user: true }, orderBy: { createdAt: "desc" }, take: 100 });
-    return <AdminTable title={title} rows={rows.map((item) => [item.operator.name, item.user?.email || "Invite not used", item.status, item.expiresAt.toLocaleDateString("en-IN"), item.createdAt.toLocaleDateString("en-IN")])} headings={["Operator", "Claimant", "Status", "Expires", "Created"]} />;
+    return <AdminTable title={title} rows={rows.map((item) => [item.operator.name, item.user?.email || "Invite not used", statusText(item.status), item.expiresAt.toLocaleDateString("en-IN"), item.createdAt.toLocaleDateString("en-IN")])} headings={["Operator", "Claimant", "Status", "Expires", "Created"]} />;
   }
 
   if (dataset === "rfqs") {
     const rows = await db.rfq.findMany({ include: { user: true, quotes: true }, orderBy: { createdAt: "desc" }, take: 100 });
-    return <AdminTable title={title} rows={rows.map((item) => [`${item.origin} to ${item.destination}`, item.user.email, `${item.passengers}`, item.status, `${item.quotes.length}`])} headings={["Route", "Customer", "Passengers", "Status", "Quotes"]} />;
+    return <AdminTable title={title} rows={rows.map((item) => [`${item.origin} to ${item.destination}`, item.user.email, `${item.passengers}`, statusText(item.status), `${item.quotes.length}`])} headings={["Route", "Customer", "Passengers", "Status", "Quotes"]} />;
   }
 
   if (dataset === "quotes") {
     const rows = await db.quote.findMany({ include: { operator: true, rfq: true }, orderBy: { createdAt: "desc" }, take: 100 });
-    return <AdminTable title={title} rows={rows.map((item) => [item.operator.name, `${item.rfq.origin} to ${item.rfq.destination}`, `Rs ${(item.price / 100000).toFixed(1)}L`, item.status, item.validUntil.toLocaleDateString("en-IN")])} headings={["Operator", "Route", "Price", "Status", "Valid until"]} />;
+    return <AdminTable title={title} rows={rows.map((item) => [item.operator.name, `${item.rfq.origin} to ${item.rfq.destination}`, `Rs ${(item.price / 100000).toFixed(1)}L`, statusText(item.status), item.validUntil.toLocaleDateString("en-IN")])} headings={["Operator", "Route", "Price", "Status", "Valid until"]} />;
   }
 
   if (dataset === "bookings") {
     const rows = await db.booking.findMany({ include: { user: true, operator: true, aircraft: true }, orderBy: { createdAt: "desc" }, take: 100 });
-    return <AdminTable title={title} rows={rows.map((item) => [item.user.email, item.operator.name, `${item.origin} to ${item.destination}`, item.status, `Rs ${(item.price / 100000).toFixed(1)}L`])} headings={["Customer", "Operator", "Route", "Status", "Price"]} />;
+    return <AdminTable title={title} rows={rows.map((item) => [item.user.email, item.operator.name, `${item.origin} to ${item.destination}`, statusText(item.status), `Rs ${(item.price / 100000).toFixed(1)}L`])} headings={["Customer", "Operator", "Route", "Status", "Price"]} />;
   }
 
   if (dataset === "users") {
@@ -43,7 +44,7 @@ export async function AdminConsolePage({ dataset }: { dataset: AdminDataset }) {
 
   if (dataset === "availability") {
     const rows = await db.availability.findMany({ include: { operator: true, aircraft: true }, orderBy: { departureAt: "desc" }, take: 100 });
-    return <AdminTable title={title} rows={rows.map((item) => [item.operator.name, item.aircraft.registration, `${item.origin} to ${item.destination}`, item.status, item.departureAt.toLocaleDateString("en-IN")])} headings={["Operator", "Aircraft", "Route", "Status", "Departure"]} />;
+    return <AdminTable title={title} rows={rows.map((item) => [item.operator.name, item.aircraft.registration, `${item.origin} to ${item.destination}`, statusText(item.status), item.departureAt.toLocaleDateString("en-IN")])} headings={["Operator", "Aircraft", "Route", "Status", "Departure"]} />;
   }
 
   if (dataset === "aviation") {
@@ -52,7 +53,7 @@ export async function AdminConsolePage({ dataset }: { dataset: AdminDataset }) {
   }
 
   const rows = await db.bookingEvent.findMany({ include: { booking: true }, orderBy: { createdAt: "desc" }, take: 100 });
-  return <AdminTable title="Audit" rows={rows.map((item) => [item.actorRole || "System", "BOOKING_STATUS_CHANGED", item.bookingId, item.toStatus, item.createdAt.toLocaleString("en-IN")])} headings={["Actor", "Action", "Entity ID", "Status", "Timestamp"]} />;
+  return <AdminTable title="Audit" rows={rows.map((item) => [item.actorRole || "System", "BOOKING_STATUS_CHANGED", item.bookingId, statusText(item.toStatus), item.createdAt.toLocaleString("en-IN")])} headings={["Actor", "Action", "Entity ID", "Status", "Timestamp"]} />;
 }
 
 function AdminTable({ title, headings, rows }: { title: string; headings: string[]; rows: string[][] }) {

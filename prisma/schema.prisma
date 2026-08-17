@@ -64,6 +64,8 @@ model User {
   notifications Notification[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  @@index([role, createdAt])
 }
 
 model Operator {
@@ -101,6 +103,9 @@ model Operator {
   notifications           Notification[]
   createdAt               DateTime         @default(now())
   updatedAt               DateTime         @updatedAt
+
+  @@index([verified, active])
+  @@index([claimed])
 }
 
 model Aircraft {
@@ -123,6 +128,9 @@ model Aircraft {
   updatedAt      DateTime         @updatedAt
   quotes         Quote[]
   bookings       Booking[]
+
+  @@index([operatorId, active])
+  @@index([registration])
 }
 
 model OperatorPricing {
@@ -151,6 +159,9 @@ model Claim {
   operator   Operator    @relation(fields: [operatorId], references: [id], onDelete: Cascade)
   user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime    @default(now())
+
+  @@index([operatorId, status])
+  @@index([token])
 }
 
 model Availability {
@@ -168,36 +179,61 @@ model Availability {
   aircraft    Aircraft           @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
   bookings    Booking[]
   createdAt   DateTime           @default(now())
+
+  @@index([operatorId, departureAt])
+  @@index([aircraftId, departureAt])
+  @@index([status, departureAt])
+}
+
+enum RfqStatus {
+  OPEN
+  QUOTED
+  AWARDED
+  EXPIRED
+  CANCELLED
+}
+
+enum QuoteStatus {
+  ACTIVE
+  ACCEPTED
+  EXPIRED
+  REJECTED
 }
 
 model Rfq {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   userId      String
   origin      String
   destination String
   departureAt DateTime
   passengers  Int
   notes       String?
-  status      String   @default("OPEN")
-  user        User     @relation(fields: [userId], references: [id])
+  status      RfqStatus    @default(OPEN)
+  user        User         @relation(fields: [userId], references: [id])
   quotes      Quote[]
-  createdAt   DateTime @default(now())
+  createdAt   DateTime     @default(now())
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
 
 model Quote {
-  id         String    @id @default(cuid())
+  id         String      @id @default(cuid())
   rfqId      String
   operatorId String
   aircraftId String?
   price      Int
-  currency   String    @default("INR")
+  currency   String       @default("INR")
   validUntil DateTime
-  status     String    @default("ACTIVE")
-  rfq        Rfq       @relation(fields: [rfqId], references: [id], onDelete: Cascade)
-  operator   Operator  @relation(fields: [operatorId], references: [id], onDelete: Cascade)
-  aircraft   Aircraft? @relation(fields: [aircraftId], references: [id])
-  createdAt  DateTime  @default(now())
+  status     QuoteStatus  @default(ACTIVE)
+  rfq        Rfq          @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  operator   Operator     @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  aircraft   Aircraft?    @relation(fields: [aircraftId], references: [id])
   bookings   Booking[]
+  createdAt  DateTime     @default(now())
+
+  @@index([operatorId, createdAt])
+  @@index([rfqId, status])
 }
 
 model Booking {
@@ -224,6 +260,10 @@ model Booking {
   events         BookingEvent[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+
+  @@index([userId, status, createdAt])
+  @@index([operatorId, status, createdAt])
+  @@index([status, createdAt])
 }
 
 model BookingEvent {
@@ -254,6 +294,9 @@ model Notification {
   user       User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
   operator   Operator?        @relation(fields: [operatorId], references: [id], onDelete: Cascade)
   createdAt  DateTime         @default(now())
+
+  @@index([userId, readAt, createdAt])
+  @@index([operatorId, readAt, createdAt])
 }
 
 model FlightPosition {
@@ -275,4 +318,24 @@ model FlightPosition {
 
   @@index([aircraftId, observedAt])
   @@index([icao24, observedAt])
+}
+
+model Airport {
+  id                  String   @id @default(cuid())
+  name                String
+  city                String
+  country             String
+  iata                String   @unique
+  icao                String?
+  latitude            Float?
+  longitude           Float?
+  timezone            String?
+  privateJetRelevance String?
+  active              Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([iata])
+  @@index([city])
+  @@index([country])
 }

@@ -3,6 +3,7 @@ import { db } from "@/lib/prisma";
 import { errorResponse, positiveInt, readJson, requiredString, requireUser, validDate } from "@/lib/api";
 import { notifyOperator, notifyUser } from "@/lib/notifications";
 import { isInternational } from "@/lib/pricing";
+import { RfqStatus } from "@/app/generated/prisma/enums";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
     const destination = requiredString(body.destination, "destination");
     const departureAt = validDate(body.departureAt, "departureAt");
     const passengers = positiveInt(body.passengers, "passengers", 30);
-    const international = isInternational(origin, destination);
+    const international = await isInternational(origin, destination);
 
     const rfq = await db.rfq.create({
       data: {
@@ -22,6 +23,7 @@ export async function POST(req: NextRequest) {
         departureAt,
         passengers,
         notes: body.notes ? String(body.notes).slice(0, 1000) : null,
+        status: RfqStatus.OPEN,
       },
     });
 

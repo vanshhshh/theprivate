@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AuthProvider, useAuth } from "@/components/auth-provider";
+import { AuthProvider, useAuth, type AuthUser } from "@/components/auth-provider";
 
 function Initials({ name }: { name?: string | null }) {
   const text = (name || "User").trim();
@@ -47,7 +47,7 @@ function PublicNav() {
   );
 }
 
-function OperatorShell({ children }: { children: React.ReactNode }) {
+function OperatorShell({ children, initialUser }: { children: React.ReactNode; initialUser?: AuthUser | null }) {
   const { user, logout } = useAuth();
   const links = [
     ["/operator/dashboard", "Dashboard"],
@@ -118,10 +118,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ShellBody({ children }: { children: React.ReactNode }) {
+function ShellBody({ children, initialUser }: { children: React.ReactNode; initialUser?: AuthUser | null }) {
   const pathname = usePathname();
   if (pathname.startsWith("/operator") && pathname !== "/operator" && pathname !== "/operator/login" && pathname !== "/operator/claim") {
-    return <OperatorShell>{children}</OperatorShell>;
+    return <OperatorShell initialUser={initialUser}>{children}</OperatorShell>;
   }
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     return <AdminShell>{children}</AdminShell>;
@@ -133,7 +133,7 @@ function ShellBody({ children }: { children: React.ReactNode }) {
       <footer className="footer">
         <div className="shell">
           <b>THE PRIVATE</b>
-          <p>Pick an empty leg, book a full charter, or request a private flight quote.</p>
+          <p>Private aviation, simplified. Search available aircraft, request charters, and manage bookings.</p>
           <small>Estimated prices are confirmed before payment.</small>
         </div>
       </footer>
@@ -141,10 +141,10 @@ function ShellBody({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, initialUser }: { children: React.ReactNode; initialUser?: AuthUser | null }) {
   return (
-    <AuthProvider>
-      <ShellBody>{children}</ShellBody>
+    <AuthProvider initialUser={initialUser}>
+      <ShellBody initialUser={initialUser}>{children}</ShellBody>
     </AuthProvider>
   );
 }

@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/empty-legs",
       "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/expire",
+      "schedule": "0 4 * * *"
     }
   ]
 }

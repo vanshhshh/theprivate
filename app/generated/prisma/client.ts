@@ -101,3 +101,8 @@ export type Notification = Prisma.NotificationModel
  * 
  */
 export type FlightPosition = Prisma.FlightPositionModel
+/**
+ * Model Airport
+ * 
+ */
+export type Airport = Prisma.AirportModel

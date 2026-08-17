@@ -64,3 +64,24 @@ export const NotificationType = {
 } as const
 
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType]
+
+
+export const RfqStatus = {
+  OPEN: 'OPEN',
+  QUOTED: 'QUOTED',
+  AWARDED: 'AWARDED',
+  EXPIRED: 'EXPIRED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type RfqStatus = (typeof RfqStatus)[keyof typeof RfqStatus]
+
+
+export const QuoteStatus = {
+  ACTIVE: 'ACTIVE',
+  ACCEPTED: 'ACCEPTED',
+  EXPIRED: 'EXPIRED',
+  REJECTED: 'REJECTED'
+} as const
+
+export type QuoteStatus = (typeof QuoteStatus)[keyof typeof QuoteStatus]

@@ -10,7 +10,40 @@ export class ApiError extends Error {
   }
 }
 
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW = 60_000;
+const RATE_LIMIT_MAX = 100;
+
+function checkRateLimit(key: string) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  entry.count += 1;
+  if (entry.count > RATE_LIMIT_MAX) return false;
+  return true;
+}
+
+export function validateCsrf(req: NextRequest) {
+  const origin = req.headers.get("origin") || req.headers.get("referer") || "";
+  const host = req.headers.get("host") || "";
+  const appUrl = process.env.APP_URL || "";
+  if (!origin && !appUrl) return true;
+  const expectedOrigin = appUrl ? new URL(appUrl).origin : `https://${host}`;
+  if (origin && origin !== expectedOrigin) {
+    throw new ApiError(403, "Invalid origin");
+  }
+}
+
 export async function requireUser(req: NextRequest) {
+  validateCsrf(req);
+  const forwarded = req.headers.get("x-forwarded-for") || "";
+  const key = forwarded.split(",")[0]?.trim() || "unknown";
+  if (!checkRateLimit(`auth:${key}`)) {
+    throw new ApiError(429, "Too many requests");
+  }
   const token = req.cookies.get("session")?.value;
   const user = await getSessionUser(token);
   if (!user) throw new ApiError(401, "UNAUTHENTICATED");
@@ -30,6 +63,10 @@ export async function requireOperator(req: NextRequest) {
 }
 
 export async function readJson(req: NextRequest) {
+  const contentType = req.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new ApiError(400, "Content-Type must be application/json");
+  }
   try {
     return await req.json();
   } catch {
