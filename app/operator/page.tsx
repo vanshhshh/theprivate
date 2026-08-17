@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { LuxuryButton, SectionHeading } from "@/components/luxury";
+import { Button, SectionHeading } from "@/components/luxury";
 import { heroImage } from "@/lib/media";
 
 export default function OperatorLanding() {
@@ -13,7 +13,7 @@ export default function OperatorLanding() {
           <span className="eyebrow">For operators</span>
           <h1>Your fleet is already here.</h1>
           <p>Claim the preloaded profile, verify aircraft, configure pricing and publish availability.</p>
-          <LuxuryButton href="/operator/login" variant="light">OPERATOR ACCESS</LuxuryButton>
+          <Button href="/operator/login" variant="light">Operator access</Button>
         </div>
       </section>
       <section className="section">

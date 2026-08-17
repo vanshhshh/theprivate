@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { AirportCombobox, DatePicker, LuxuryButton, PassengerSelector } from "@/components/luxury";
+import { AirportCombobox, Button, DatePicker, PassengerSelector } from "@/components/luxury";
 
 function CharterRequestContent() {
   const query = useSearchParams();
@@ -38,54 +38,63 @@ function CharterRequestContent() {
   return (
     <main>
       <section className="section">
-        <div className="shell">
-          <div className="sectionHeading">
-            <span>Private charter</span>
-            <h1>We can source an aircraft for you.</h1>
-            <p>Tell us the trip. We will source options.</p>
+        <div className="shell" style={{ maxWidth: 720, margin: "0 auto" }}>
+          <div style={{ marginBottom: "var(--space-7)" }}>
+            <span className="eyebrow">Private charter</span>
+            <h1 style={{ marginTop: "var(--space-3)", marginBottom: "var(--space-2)" }}>We can source an aircraft for you.</h1>
+            <p className="muted">Tell us the trip. We will source options.</p>
           </div>
 
-          <div className="stepLayout">
-            <div className="stepPanel">
-              <div className="stepNumber">01</div>
-              <div className="stepBody">
-                <h2>Where are you going?</h2>
-                <div className="twoColumn">
-                  <AirportCombobox label="FROM" value={origin} onChange={setOrigin} />
-                  <AirportCombobox label="TO" value={destination} onChange={setDestination} />
-                </div>
+          <div style={{ display: "grid", gap: "var(--space-1)", borderTop: "var(--border)", borderLeft: "var(--border)" }}>
+            <div style={{ padding: "var(--space-6)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">01 / Where</span>
+              <h3 style={{ marginTop: "var(--space-3)", marginBottom: "var(--space-4)" }}>Where are you going?</h3>
+              <div style={{ display: "grid", gap: "var(--space-4)", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+                <AirportCombobox label="From" value={origin} onChange={setOrigin} />
+                <AirportCombobox label="To" value={destination} onChange={setDestination} />
               </div>
             </div>
 
-            <div className="stepPanel">
-              <div className="stepNumber">02</div>
-              <div className="stepBody">
-                <h2>When?</h2>
-                <div className="twoColumn">
-                  <DatePicker label="DEPARTURE" value={departureAt} onChange={setDepartureAt} />
-                  <DatePicker label="RETURN" value={returnAt} onChange={setReturnAt} />
-                </div>
+            <div style={{ padding: "var(--space-6)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">02 / When</span>
+              <h3 style={{ marginTop: "var(--space-3)", marginBottom: "var(--space-4)" }}>When?</h3>
+              <div style={{ display: "grid", gap: "var(--space-4)", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+                <DatePicker label="Departure" value={departureAt} onChange={setDepartureAt} />
+                <DatePicker label="Return" value={returnAt} onChange={setReturnAt} />
               </div>
             </div>
 
-            <div className="stepPanel">
-              <div className="stepNumber">03</div>
-              <div className="stepBody">
-                <h2>Who is flying?</h2>
-                <PassengerSelector value={passengers} onChange={setPassengers} />
-              </div>
+            <div style={{ padding: "var(--space-6)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">03 / Who</span>
+              <h3 style={{ marginTop: "var(--space-3)", marginBottom: "var(--space-4)" }}>Who is flying?</h3>
+              <PassengerSelector value={passengers} onChange={setPassengers} />
             </div>
 
-            <div className="stepPanel">
-              <div className="stepNumber">04</div>
-              <div className="stepBody">
-                <h2>What do you need?</h2>
-                <input placeholder="Aircraft preference" value={preference} onChange={(event) => setPreference(event.target.value)} />
-                <textarea rows={5} placeholder="Notes" value={notes} onChange={(event) => setNotes(event.target.value)} />
-                <LuxuryButton onClick={submit} disabled={sending}>{sending ? "REQUESTING" : "REQUEST CHARTER"}</LuxuryButton>
-                {message && <p className="notice">{message}</p>}
+            <div style={{ padding: "var(--space-6)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">04 / Preferences</span>
+              <h3 style={{ marginTop: "var(--space-3)", marginBottom: "var(--space-4)" }}>What do you need?</h3>
+              <div style={{ display: "grid", gap: "var(--space-3)" }}>
+                <input
+                  className="input"
+                  placeholder="Aircraft preference"
+                  value={preference}
+                  onChange={(e) => setPreference(e.target.value)}
+                />
+                <textarea
+                  className="input"
+                  rows={5}
+                  placeholder="Notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  style={{ resize: "vertical" }}
+                />
               </div>
             </div>
+          </div>
+
+          <div style={{ marginTop: "var(--space-6)", display: "flex", gap: "var(--space-3)", alignItems: "center" }}>
+            <Button onClick={submit} disabled={sending}>{sending ? "Requesting..." : "Request charter"}</Button>
+            {message && <span style={{ color: "var(--accent-dark)", fontWeight: 600, fontSize: "var(--text-sm)" }}>{message}</span>}
           </div>
         </div>
       </section>

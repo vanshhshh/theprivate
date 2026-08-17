@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/prisma";
 import { calculateAircraftPrice } from "@/lib/pricing";
 import { airportCode, findAirport } from "@/lib/airports";
-import { LuxuryButton, PriceDisplay, RouteDisplay } from "@/components/luxury";
+import { Button, PriceDisplay, RouteDisplay } from "@/components/luxury";
 import { imageForSeed } from "@/lib/media";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -53,46 +53,72 @@ export default async function AircraftDetail({
 
   return (
     <main>
-      <section className="detailHero">
-        <div className="detailHeroImage">
+      <section className="detail-hero">
+        <div className="detail-hero-image">
           <Image src={imageForSeed(aircraft.registration || aircraft.model)} alt={aircraft.model || aircraft.registration} fill priority sizes="100vw" />
         </div>
-        <div className="shell detailHeroContent">
+        <div className="detail-hero-content">
           <span className="eyebrow">Private aircraft</span>
           <h1>{aircraft.model || aircraft.type || "Private aircraft"}</h1>
-          <p>{aircraft.registration} / {aircraft.seats || "-"} passengers / estimated price</p>
-        </div>
-      </section>
-
-      <section className="section tight">
-        <div className="shell">
-          <div className="detailStats">
-            <div><span>Route</span><b>{airportCode(from)} to {airportCode(to)}</b></div>
-            <div><span>Departure</span><b>{date ? new Date(`${date}T00:00:00`).toLocaleDateString("en-US", { day: "2-digit", month: "short" }).toUpperCase() : "Flexible"}</b></div>
-            <div><span>Seats</span><b>{aircraft.seats || "-"}</b></div>
-            <div><span>Range</span><b>Confirmed before flight</b></div>
+          <p className="subtitle">{aircraft.registration} / {aircraft.seats || "-"} passengers / estimated price</p>
+          <div style={{ display: "flex", gap: "var(--space-4)", marginTop: "var(--space-5)", flexWrap: "wrap", alignItems: "center" }}>
+            <RouteDisplay from={findAirport(from).city} to={findAirport(to).city} />
+            <span className="muted" style={{ fontSize: "var(--text-sm)" }}>{findAirport(from).name} to {findAirport(to).name}</span>
           </div>
         </div>
       </section>
 
-      <section className="section tight">
-        <div className="shell operatorGrid">
-          <div className="surface">
-            <span className="microLabel">Aircraft</span>
-            <h2>Private cabin, clear trip request.</h2>
-            <p className="muted">
-              Request this aircraft for your route. Final availability and price are confirmed before payment.
-            </p>
-            <div className="aircraftMeta">
-              <RouteDisplay from={findAirport(from).city} to={findAirport(to).city} />
-              <span>{findAirport(from).name} to {findAirport(to).name}</span>
+      <section className="section-tight">
+        <div className="shell">
+          <div className="detail-stats">
+            <div>
+              <span className="label">Route</span>
+              <span className="value">{airportCode(from)} to {airportCode(to)}</span>
+            </div>
+            <div>
+              <span className="label">Departure</span>
+              <span className="value" style={{ fontSize: "var(--text-2xl)" }}>{date ? new Date(`${date}T00:00:00`).toLocaleDateString("en-US", { day: "2-digit", month: "short" }).toUpperCase() : "Flexible"}</span>
+            </div>
+            <div>
+              <span className="label">Seats</span>
+              <span className="value">{aircraft.seats || "-"}</span>
+            </div>
+            <div>
+              <span className="label">Range</span>
+              <span className="value" style={{ fontSize: "var(--text-2xl)" }}>Confirmed before flight</span>
             </div>
           </div>
-          <aside className="pricingPreview">
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="shell" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(320px, .85fr)", gap: "var(--space-7)", alignItems: "start" }}>
+          <div className="card">
+            <span className="eyebrow">Aircraft</span>
+            <h3 style={{ marginTop: "var(--space-3)", marginBottom: "var(--space-4)" }}>Private cabin, clear trip request.</h3>
+            <p className="muted" style={{ maxWidth: 480, lineHeight: "var(--leading-relaxed)" }}>
+              Request this aircraft for your route. Final availability and price are confirmed before payment.
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", marginTop: "var(--space-5)", padding: "var(--space-4) 0", borderTop: "var(--border-subtle)", borderBottom: "var(--border-subtle)" }}>
+              <RouteDisplay from={findAirport(from).city} to={findAirport(to).city} />
+              <span className="muted" style={{ fontSize: "var(--text-sm)" }}>{findAirport(from).name} to {findAirport(to).name}</span>
+            </div>
+            <div style={{ marginTop: "var(--space-5)" }}>
+              <p className="muted" style={{ fontSize: "var(--text-sm)", marginBottom: "var(--space-4)" }}>
+                Operator: <span style={{ color: "var(--ink)", fontWeight: 600 }}>{aircraft.operator.name}</span>
+                {aircraft.operator.verified && <span className="badge badge-dark" style={{ marginLeft: "var(--space-2)" }}>Verified</span>}
+              </p>
+            </div>
+          </div>
+          <div style={{ background: "var(--ink)", color: "var(--white)", padding: "var(--space-6)", display: "grid", gap: "var(--space-4)" }}>
             <PriceDisplay value={price} />
-            <p>Estimated price. Final confirmation happens before payment.</p>
-            <LuxuryButton href={`/booking/new?${bookingParams.toString()}`} variant="light">REQUEST BOOKING</LuxuryButton>
-          </aside>
+            <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "var(--text-sm)", lineHeight: "var(--leading-normal)" }}>
+              Estimated price. Final confirmation happens before payment.
+            </p>
+            <div>
+              <Button href={`/booking/new?${bookingParams.toString()}`} variant="light">Request booking</Button>
+            </div>
+          </div>
         </div>
       </section>
     </main>

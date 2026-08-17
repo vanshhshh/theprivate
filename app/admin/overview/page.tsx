@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/prisma";
 import Link from "next/link";
-import { LuxuryButton } from "@/components/luxury";
+import { Button } from "@/components/luxury";
 
 export default async function AdminOverview() {
   const user = await getCurrentUser();
@@ -50,63 +50,75 @@ export default async function AdminOverview() {
     <main>
       <section className="section">
         <div className="shell">
-          <div className="sectionHeading">
-            <span>Overview</span>
-            <h1>Marketplace control.</h1>
+          <div className="section-heading">
+            <span className="eyebrow">Overview</span>
+            <h1 style={{ marginTop: "var(--space-3)", marginBottom: "var(--space-2)" }}>Marketplace control.</h1>
             <p>Real-time metrics across operators, aircraft, bookings and requests.</p>
           </div>
 
-          <div className="actionStrip" style={{ marginBottom: 34 }}>
-            <div>
-              <span className="microLabel">OPERATORS</span>
-              <h3>Verified</h3>
-              <b>{verifiedOperatorsCount}</b>
-              <small className="muted">{unverifiedOperatorsCount} unverified</small>
+          <div style={{ display: "grid", gap: "var(--space-1)", borderTop: "var(--border)", borderLeft: "var(--border)", marginBottom: "var(--space-7)" }}>
+            <div style={{ padding: "var(--space-6)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">Operators</span>
+              <div style={{ marginTop: "var(--space-3)", display: "grid", gap: "var(--space-1)" }}>
+                <div style={{ fontSize: "var(--text-4xl)", fontFamily: "var(--serif)", fontWeight: 500 }}>{verifiedOperatorsCount}</div>
+                <span className="muted" style={{ fontSize: "var(--text-sm)", letterSpacing: "var(--tracking-wide)", textTransform: "uppercase" }}>{unverifiedOperatorsCount} unverified</span>
+              </div>
             </div>
-            <div>
-              <span className="microLabel">AIRCRAFT</span>
-              <h3>Active</h3>
-              <b>{activeAircraftCount}</b>
-              <small className="muted">{aircraftCount} total</small>
+            <div style={{ padding: "var(--space-6)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">Aircraft</span>
+              <div style={{ marginTop: "var(--space-3)", display: "grid", gap: "var(--space-1)" }}>
+                <div style={{ fontSize: "var(--text-4xl)", fontFamily: "var(--serif)", fontWeight: 500 }}>{activeAircraftCount}</div>
+                <span className="muted" style={{ fontSize: "var(--text-sm)", letterSpacing: "var(--tracking-wide)", textTransform: "uppercase" }}>{aircraftCount} total</span>
+              </div>
             </div>
-            <div>
-              <span className="microLabel">BOOKINGS</span>
-              <h3>Confirmed</h3>
-              <b>{confirmedBookingsCount}</b>
-              <small className="muted">{pendingBookingsCount} pending</small>
+            <div style={{ padding: "var(--space-6)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">Bookings</span>
+              <div style={{ marginTop: "var(--space-3)", display: "grid", gap: "var(--space-1)" }}>
+                <div style={{ fontSize: "var(--text-4xl)", fontFamily: "var(--serif)", fontWeight: 500 }}>{confirmedBookingsCount}</div>
+                <span className="muted" style={{ fontSize: "var(--text-sm)", letterSpacing: "var(--tracking-wide)", textTransform: "uppercase" }}>{pendingBookingsCount} pending</span>
+              </div>
             </div>
-            <div>
-              <span className="microLabel">REQUESTS</span>
-              <h3>Open RFQs</h3>
-              <b>{openRfqsCount}</b>
+            <div style={{ padding: "var(--space-6)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">Requests</span>
+              <div style={{ marginTop: "var(--space-3)", display: "grid", gap: "var(--space-1)" }}>
+                <div style={{ fontSize: "var(--text-4xl)", fontFamily: "var(--serif)", fontWeight: 500 }}>{openRfqsCount}</div>
+                <span className="muted" style={{ fontSize: "var(--text-sm)", letterSpacing: "var(--tracking-wide)", textTransform: "uppercase" }}>Open RFQs</span>
+              </div>
             </div>
           </div>
 
           {alerts.length > 0 && (
-            <div className="surface" style={{ marginBottom: 34 }}>
-              <span className="microLabel">Alerts</span>
-              <div className="fleetRows">
+            <div style={{ background: "var(--white)", border: "var(--border)", padding: "var(--space-6)", marginBottom: "var(--space-7)" }}>
+              <span className="eyebrow">Alerts</span>
+              <div style={{ display: "grid", gap: 0, borderTop: "var(--border)", marginTop: "var(--space-4)" }}>
                 {alerts.map((alert: any) => (
-                  <div className="fleetRow" key={alert.href}>
-                    <span><b>{alert.label}</b><small className="muted">{alert.value} items need attention</small></span>
-                    <Link className="luxuryButton light" href={alert.href}>VIEW</Link>
+                  <div key={alert.href} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--space-4)", padding: "var(--space-4) 0", borderBottom: "var(--border-subtle)" }}>
+                    <span>
+                      <b style={{ fontSize: "var(--text-sm)", fontWeight: 600 }}>{alert.label}</b>
+                      <span className="muted" style={{ display: "block", fontSize: "var(--text-sm)", marginTop: "var(--space-1)" }}>{alert.value} items need attention</span>
+                    </span>
+                    <Button href={alert.href} variant="light">View</Button>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="surface">
-            <span className="microLabel">Quick links</span>
-            <div className="actionStrip">
-              <Link className="luxuryButton ghost" href="/admin/operators">Operators</Link>
-              <Link className="luxuryButton ghost" href="/admin/aircraft">Aircraft</Link>
-              <Link className="luxuryButton ghost" href="/admin/bookings">Bookings</Link>
-              <Link className="luxuryButton ghost" href="/admin/rfqs">RFQs</Link>
-              <Link className="luxuryButton ghost" href="/admin/quotes">Quotes</Link>
-              <Link className="luxuryButton ghost" href="/admin/claims">Claims</Link>
-              <Link className="luxuryButton ghost" href="/admin/users">Users</Link>
-              <Link className="luxuryButton ghost" href="/admin/audit">Audit</Link>
+          <div style={{ background: "var(--white)", border: "var(--border)", padding: "var(--space-6)" }}>
+            <span className="eyebrow">Quick links</span>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)", marginTop: "var(--space-4)" }}>
+              {[
+                ["/admin/operators", "Operators"],
+                ["/admin/aircraft", "Aircraft"],
+                ["/admin/bookings", "Bookings"],
+                ["/admin/rfqs", "RFQs"],
+                ["/admin/quotes", "Quotes"],
+                ["/admin/claims", "Claims"],
+                ["/admin/users", "Users"],
+                ["/admin/audit", "Audit"],
+              ].map(([href, label]) => (
+                <Link key={href} href={href} className="btn btn-sm btn-ghost">{label}</Link>
+              ))}
             </div>
           </div>
         </div>

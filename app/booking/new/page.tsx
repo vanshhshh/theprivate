@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AirportDisplay, LuxuryButton, RouteDisplay } from "@/components/luxury";
+import { AirportDisplay, Button, RouteDisplay } from "@/components/luxury";
 
 function NewBookingContent() {
   const query = useSearchParams();
@@ -37,25 +37,46 @@ function NewBookingContent() {
   return (
     <main>
       <section className="section">
-        <div className="shell operatorGrid">
-          <div>
-            <div className="eyebrow">Booking request</div>
-            <h1>Request confirmation.</h1>
+        <div className="shell" style={{ maxWidth: 720, margin: "0 auto" }}>
+          <div style={{ marginBottom: "var(--space-7)" }}>
+            <span className="eyebrow">Booking request</span>
+            <h1 style={{ marginTop: "var(--space-3)", marginBottom: "var(--space-2)" }}>Request confirmation.</h1>
             <p className="muted">No payment is requested until availability and price are confirmed.</p>
           </div>
-          <aside className="surface">
-            <RouteDisplay from={from} to={to} />
-            <div className="detailStats" style={{ marginTop: 24 }}>
-              <div><span>From</span><AirportDisplay value={from} /></div>
-              <div><span>To</span><AirportDisplay value={to} /></div>
-              <div><span>Passengers</span><b>{passengers}</b></div>
-              <div><span>Price</span><b>Server calculated</b></div>
+
+          <div style={{ display: "grid", gap: "var(--space-1)", borderTop: "var(--border)", borderLeft: "var(--border)", marginBottom: "var(--space-6)" }}>
+            <div style={{ padding: "var(--space-5)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">Route</span>
+              <div style={{ marginTop: "var(--space-3)" }}>
+                <RouteDisplay from={from} to={to} />
+              </div>
             </div>
-            <div style={{ marginTop: 24 }}>
-              <LuxuryButton onClick={create} disabled={submitting}>{submitting ? "REQUESTING" : "REQUEST CONFIRMATION"}</LuxuryButton>
+            <div style={{ padding: "var(--space-5)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">From</span>
+              <div style={{ marginTop: "var(--space-2)" }}>
+                <AirportDisplay value={from} />
+              </div>
             </div>
-            {message && <p className="error">{message}</p>}
-          </aside>
+            <div style={{ padding: "var(--space-5)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">To</span>
+              <div style={{ marginTop: "var(--space-2)" }}>
+                <AirportDisplay value={to} />
+              </div>
+            </div>
+            <div style={{ padding: "var(--space-5)", background: "var(--white)", borderRight: "var(--border)", borderBottom: "var(--border)" }}>
+              <span className="eyebrow">Passengers</span>
+              <div style={{ marginTop: "var(--space-2)", fontSize: "var(--text-3xl)", fontFamily: "var(--serif)" }}>{passengers}</div>
+            </div>
+            <div style={{ padding: "var(--space-5)", background: "var(--ink)", color: "var(--white)" }}>
+              <span className="eyebrow" style={{ color: "var(--accent)" }}>Price</span>
+              <div style={{ marginTop: "var(--space-2)", fontSize: "var(--text-3xl)", fontFamily: "var(--serif)" }}>Server calculated</div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "var(--space-3)" }}>
+            <Button onClick={create} disabled={submitting}>{submitting ? "Requesting..." : "Request confirmation"}</Button>
+          </div>
+          {message && <p style={{ color: "var(--error)", fontWeight: 600, marginTop: "var(--space-4)" }}>{message}</p>}
         </div>
       </section>
     </main>

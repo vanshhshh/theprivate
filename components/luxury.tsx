@@ -6,22 +6,23 @@ import { useMemo, useState } from "react";
 import { Airport, airportCode, findAirport, searchAirports } from "@/lib/airports";
 import { imageForSeed } from "@/lib/media";
 
-export function LuxuryButton({ children, href, variant = "dark", onClick, disabled }: {
+export function Button({ children, href, variant = "dark", onClick, disabled, className }: {
   children: React.ReactNode;
   href?: string;
   variant?: "dark" | "light" | "ghost";
   onClick?: () => void;
   disabled?: boolean;
+  className?: string;
 }) {
-  const className = `luxuryButton ${variant}`;
-  if (href) return <Link className={className} href={href}>{children}</Link>;
-  return <button className={className} onClick={onClick} disabled={disabled}>{children}</button>;
+  const cls = `btn btn-${variant}${className ? ` ${className}` : ""}`;
+  if (href) return <Link className={cls} href={href}>{children}</Link>;
+  return <button className={cls} onClick={onClick} disabled={disabled}>{children}</button>;
 }
 
 export function SectionHeading({ eyebrow, title, children }: { eyebrow: string; title: string; children?: React.ReactNode }) {
   return (
-    <div className="sectionHeading">
-      <span>{eyebrow}</span>
+    <div className="section-heading">
+      <span className="eyebrow">{eyebrow}</span>
       <h2>{title}</h2>
       {children && <p>{children}</p>}
     </div>
@@ -31,34 +32,34 @@ export function SectionHeading({ eyebrow, title, children }: { eyebrow: string; 
 export function AirportDisplay({ value }: { value?: string | null }) {
   const airport = findAirport(value);
   return (
-    <span className="airportDisplay">
+    <span>
       <b>{airport.city}</b>
-      <small>{airport.name}</small>
+      <span className="muted" style={{ display: "block", fontSize: "var(--text-sm)" }}>{airport.name}</span>
     </span>
   );
 }
 
 export function RouteDisplay({ from, to }: { from?: string | null; to?: string | null }) {
   return (
-    <span className="routeDisplay">
-      <b>{airportCode(from)}</b>
-      <i />
-      <b>{airportCode(to)}</b>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-3)" }}>
+      <b style={{ fontFamily: "var(--serif)", fontSize: "var(--text-2xl)", fontWeight: 500, letterSpacing: "var(--tracking-tight)" }}>{airportCode(from)}</b>
+      <span style={{ display: "block", width: 40, height: 1, background: "var(--accent)" }} />
+      <b style={{ fontFamily: "var(--serif)", fontSize: "var(--text-2xl)", fontWeight: 500, letterSpacing: "var(--tracking-tight)" }}>{airportCode(to)}</b>
     </span>
   );
 }
 
-export function PriceDisplay({ value, label = "ESTIMATED PRICE" }: { value: number; label?: string }) {
+export function PriceDisplay({ value, label = "ESTIMATED" }: { value: number; label?: string }) {
   return (
-    <span className="priceDisplay">
-      <small>{label}</small>
-      <b>Rs {(value / 100000).toFixed(1)}L</b>
+    <span className="price-block">
+      <span className="label">{label}</span>
+      <span className="value">Rs {(value / 100000).toFixed(1)}L</span>
     </span>
   );
 }
 
 export function EmptyLegBadge() {
-  return <span className="emptyLegBadge">EMPTY LEG</span>;
+  return <span className="empty-leg-badge">Empty leg</span>;
 }
 
 export function AirportCombobox({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
@@ -74,34 +75,35 @@ export function AirportCombobox({ label, value, onChange }: { label: string; val
   }
 
   return (
-    <div className="airportCombo">
+    <div className="search-field">
       <label>{label}</label>
-      <button type="button" className="airportTrigger" onClick={() => setOpen(true)}>
-        <span>{selected.city}</span>
-        <small>{selected.name}</small>
+      <button type="button" className="search-field-trigger" onClick={() => setOpen(true)}>
+        <span className="value">{selected.city}</span>
+        <span className="hint">{selected.name}</span>
       </button>
       {open && (
-        <div className="comboOverlay" role="dialog" aria-label={`${label} airport`}>
-          <div className="comboPanel">
-            <div className="comboTop">
-              <span>{label}</span>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Close airport search">Close</button>
+        <div className="overlay" onClick={() => setOpen(false)}>
+          <div className="overlay-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="overlay-header">
+              <span className="eyebrow">{label}</span>
+              <button type="button" onClick={() => setOpen(false)} className="btn btn-sm btn-ghost">Close</button>
             </div>
             <input
               autoFocus
+              className="input"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(e) => setQuery(e.target.value)}
               placeholder="City, airport, country or IATA code"
-              aria-label={`${label} airport search`}
             />
-            <div className="airportOptions">
+            <div className="airport-list">
               {results.map((airport) => (
-                <button type="button" key={airport.iata} onClick={() => choose(airport)}>
+                <button type="button" key={airport.iata} className="airport-option" onClick={() => choose(airport)}>
                   <span>
-                    <b>{airport.name.toUpperCase()}</b>
-                    <small>{airport.city}, {airport.country}</small>
+                    <span className="name">{airport.name}</span>
+                    <span className="city">{airport.city}</span>
+                    <span className="country">{airport.country}</span>
                   </span>
-                  <strong>{airport.iata}</strong>
+                  <span className="code">{airport.iata}</span>
                 </button>
               ))}
             </div>
@@ -142,22 +144,24 @@ export function DatePicker({ label, value, onChange }: { label: string; value: s
   }, [month]);
 
   return (
-    <div className="datePicker">
+    <div className="search-field">
       <label>{label}</label>
-      <button type="button" className="dateTrigger" onClick={() => setOpen(true)}>
-        <span>{labelDate.day}</span>
-        <small>{labelDate.month}</small>
+      <button type="button" className="search-field-trigger" onClick={() => setOpen(true)}>
+        <span className="value">{labelDate.day}</span>
+        <span className="hint">{labelDate.month}</span>
       </button>
       {open && (
-        <div className="comboOverlay" role="dialog" aria-label={`${label} date picker`}>
-          <div className="calendarPanel">
-            <div className="calendarTop">
-              <button type="button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} aria-label="Previous month">Prev</button>
+        <div className="overlay" onClick={() => setOpen(false)}>
+          <div className="overlay-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="cal-header">
+              <button type="button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} className="btn btn-sm btn-ghost">Prev</button>
               <b>{month.toLocaleDateString("en-US", { month: "long", year: "numeric" }).toUpperCase()}</b>
-              <button type="button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} aria-label="Next month">Next</button>
+              <button type="button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} className="btn btn-sm btn-ghost">Next</button>
             </div>
-            <div className="calendarWeek">{["S", "M", "T", "W", "T", "F", "S"].map((day, index) => <span key={`${day}-${index}`}>{day}</span>)}</div>
-            <div className="calendarGrid">
+            <div className="cal-grid">
+              {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+                <div key={`${day}-${index}`} className="cal-weekday">{day}</div>
+              ))}
               {days.map((day) => {
                 const isCurrentMonth = day.getMonth() === month.getMonth();
                 const isSelected = selected && toDateValue(day) === toDateValue(selected);
@@ -166,7 +170,7 @@ export function DatePicker({ label, value, onChange }: { label: string; value: s
                   <button
                     type="button"
                     key={toDateValue(day)}
-                    className={`${isCurrentMonth ? "" : "dim"} ${isSelected ? "selected" : ""} ${isToday ? "today" : ""}`}
+                    className={`cal-day${isCurrentMonth ? "" : " dim"}${isSelected ? " selected" : ""}${isToday && !isSelected ? " today" : ""}`}
                     onClick={() => {
                       onChange(toDateValue(day));
                       setOpen(false);
@@ -186,14 +190,13 @@ export function DatePicker({ label, value, onChange }: { label: string; value: s
 
 export function PassengerSelector({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   return (
-    <div className="passengerSelector">
-      <label>PASSENGERS</label>
-      <div>
-        <button type="button" onClick={() => onChange(Math.max(1, value - 1))} aria-label="Decrease passengers">-</button>
-        <span>{String(value).padStart(2, "0")}</span>
-        <button type="button" onClick={() => onChange(Math.min(30, value + 1))} aria-label="Increase passengers">+</button>
+    <div className="pax-selector">
+      <label>Passengers</label>
+      <div className="pax-controls">
+        <button type="button" className="pax-btn" onClick={() => onChange(Math.max(1, value - 1))} aria-label="Decrease passengers">−</button>
+        <span className="pax-value">{String(value).padStart(2, "0")}</span>
+        <button type="button" className="pax-btn" onClick={() => onChange(Math.min(30, value + 1))} aria-label="Increase passengers">+</button>
       </div>
-      <small>{value} passengers</small>
     </div>
   );
 }
@@ -220,21 +223,57 @@ export function SearchPanel({ defaultFrom = "Delhi", defaultTo = "Dubai", defaul
   }, [date, from, passengers, returnDate, to, tripType]);
 
   return (
-    <div className={`conciergeSearch ${compact ? "compact" : ""}`}>
-      <div className="searchMode">
-        <button className={tripType === "one-way" ? "active" : ""} onClick={() => setTripType("one-way")} type="button">One-way</button>
-        <button className={tripType === "round-trip" ? "active" : ""} onClick={() => setTripType("round-trip")} type="button">Round trip</button>
+    <div className={`search-panel${compact ? " search-panel--compact" : ""}`}>
+      <div style={{ display: "inline-flex", border: "var(--border)", marginBottom: "var(--space-3)" }}>
+        <button
+          type="button"
+          style={{
+            padding: "var(--space-2) var(--space-4)",
+            border: "none",
+            background: tripType === "one-way" ? "var(--ink)" : "transparent",
+            color: tripType === "one-way" ? "var(--white)" : "var(--muted)",
+            fontSize: "var(--text-xs)",
+            fontWeight: 700,
+            letterSpacing: "var(--tracking-wider)",
+            textTransform: "uppercase",
+            cursor: "pointer",
+            transition: "all var(--duration-fast) var(--ease-out)",
+          }}
+          onClick={() => setTripType("one-way")}
+        >
+          One-way
+        </button>
+        <button
+          type="button"
+          style={{
+            padding: "var(--space-2) var(--space-4)",
+            border: "none",
+            background: tripType === "round-trip" ? "var(--ink)" : "transparent",
+            color: tripType === "round-trip" ? "var(--white)" : "var(--muted)",
+            fontSize: "var(--text-xs)",
+            fontWeight: 700,
+            letterSpacing: "var(--tracking-wider)",
+            textTransform: "uppercase",
+            cursor: "pointer",
+            transition: "all var(--duration-fast) var(--ease-out)",
+          }}
+          onClick={() => setTripType("round-trip")}
+        >
+          Round trip
+        </button>
       </div>
-      <div className="conciergeGrid">
-        <AirportCombobox label="FROM" value={from} onChange={setFrom} />
-        <AirportCombobox label="TO" value={to} onChange={setTo} />
-        <DatePicker label="DEPARTURE" value={date} onChange={setDate} />
-        {tripType === "round-trip" && <DatePicker label="RETURN" value={returnDate} onChange={setReturnDate} />}
-        <PassengerSelector value={passengers} onChange={setPassengers} />
+      <div className="search-row">
+        <AirportCombobox label="From" value={from} onChange={setFrom} />
+        <AirportCombobox label="To" value={to} onChange={setTo} />
+        <DatePicker label="Departure" value={date} onChange={setDate} />
+        {tripType === "round-trip" && <DatePicker label="Return" value={returnDate} onChange={setReturnDate} />}
       </div>
-      <div className="searchSubmit">
-        <LuxuryButton href={searchHref}>SEARCH AIRCRAFT</LuxuryButton>
-        <LuxuryButton variant="ghost" href={`/charter/request?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&pax=${passengers}`}>REQUEST CHARTER</LuxuryButton>
+      <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-4)", flexWrap: "wrap", alignItems: "center" }}>
+        <Button href={searchHref}>Search aircraft</Button>
+        <Button variant="ghost" href={`/charter/request?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&pax=${passengers}`}>Request charter</Button>
+        <div style={{ marginLeft: "auto" }}>
+          <PassengerSelector value={passengers} onChange={setPassengers} />
+        </div>
       </div>
     </div>
   );
@@ -242,24 +281,24 @@ export function SearchPanel({ defaultFrom = "Delhi", defaultTo = "Dubai", defaul
 
 export function AircraftCard({ aircraft, href, from, to }: { aircraft: any; href: string; from: string; to: string }) {
   return (
-    <article className="aircraftCard">
-      <Link href={href} className="aircraftImage">
+    <article className="aircraft-card">
+      <Link href={href} className="aircraft-card-image">
         <Image src={imageForSeed(aircraft.registration || aircraft.model)} alt={aircraft.model || "Private aircraft"} fill sizes="(max-width: 860px) 100vw, 420px" />
         {aircraft.availability?.emptyLeg && <EmptyLegBadge />}
       </Link>
-      <div className="aircraftBody">
+      <div className="aircraft-card-body">
         <div>
-          <span className="microLabel">{aircraft.availability?.emptyLeg ? "Empty leg" : "Whole charter"}</span>
-          <h2>{aircraft.model || aircraft.type || "Private aircraft"}</h2>
-          <p className="muted">{aircraft.seats || "-"} seats / {aircraft.registration}</p>
+          <span className="eyebrow">{aircraft.availability?.emptyLeg ? "Empty leg" : "Whole charter"}</span>
+          <h3>{aircraft.model || aircraft.type || "Private aircraft"}</h3>
+          <p className="muted" style={{ fontSize: "var(--text-sm)" }}>{aircraft.seats || "-"} seats / {aircraft.registration}</p>
         </div>
-        <div className="aircraftMeta">
+        <div className="aircraft-meta">
           <RouteDisplay from={from} to={to} />
           <span>Approx. charter estimate</span>
         </div>
-        <div className="aircraftFooter">
+        <div className="aircraft-footer">
           <PriceDisplay value={aircraft.quote || aircraft.estimate || 0} />
-          <LuxuryButton href={href} variant="light">VIEW AIRCRAFT</LuxuryButton>
+          <Button variant="light" href={href}>View aircraft</Button>
         </div>
       </div>
     </article>
@@ -268,24 +307,24 @@ export function AircraftCard({ aircraft, href, from, to }: { aircraft: any; href
 
 export function ClaimProfileCard({ operator, children }: { operator: any; children?: React.ReactNode }) {
   return (
-    <div className="claimProfile">
+    <div className="card" style={{ display: "grid", gridTemplateColumns: "minmax(0, .85fr) minmax(360px, 1fr)", gap: "var(--space-6)", alignItems: "start" }}>
       <div>
-        <span className="microLabel">Prepared profile</span>
-        <h2>{operator.name}</h2>
-        <p>{operator.aircraft.length} aircraft preloaded from aviation records.</p>
+        <span className="eyebrow">Prepared profile</span>
+        <h3 style={{ fontSize: "clamp(36px, 5vw, 64px)", marginTop: "var(--space-3)" }}>{operator.name}</h3>
+        <p className="muted" style={{ marginTop: "var(--space-2)" }}>{operator.aircraft.length} aircraft preloaded from aviation records.</p>
       </div>
-      <div className="fleetPreview">
+      <div style={{ borderTop: "var(--border)", display: "grid", gap: 0 }}>
         {operator.aircraft.slice(0, 5).map((aircraft: any) => (
-          <div key={aircraft.id || aircraft.registration} className="fleetPreviewRow">
-            <span>
-              <b>{aircraft.model || aircraft.type || "Aircraft"}</b>
-              <small>{aircraft.registration}</small>
+          <div key={aircraft.id || aircraft.registration} style={{ display: "flex", justifyContent: "space-between", gap: "var(--space-4)", padding: "var(--space-3) 0", borderBottom: "var(--border-subtle)" }}>
+            <span style={{ display: "grid", gap: "var(--space-1)" }}>
+              <b style={{ fontSize: "var(--text-sm)" }}>{aircraft.model || aircraft.type || "Aircraft"}</b>
+              <small className="muted">{aircraft.registration}</small>
             </span>
-            <strong>{aircraft.seats || "-"} seats</strong>
+            <strong style={{ color: "var(--accent-dark)", fontFamily: "var(--serif)", fontSize: "var(--text-xl)" }}>{aircraft.seats || "-"} seats</strong>
           </div>
         ))}
       </div>
-      {children}
+      {children && <div style={{ gridColumn: "1 / -1" }}>{children}</div>}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { LuxuryButton } from "@/components/luxury";
+import { Button } from "@/components/luxury";
 import { heroImage } from "@/lib/media";
 
 export default function OperatorLogin() {
@@ -40,7 +40,7 @@ export default function OperatorLogin() {
             {register && <label>NAME<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></label>}
             <label>BUSINESS EMAIL<input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
             <label>PASSWORD<input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></label>
-            <LuxuryButton onClick={submit}>{register ? "CREATE ACCOUNT" : "CONTINUE"}</LuxuryButton>
+            <Button onClick={submit}>{register ? "CREATE ACCOUNT" : "CONTINUE"}</Button>
             <button className="linkbtn" onClick={() => setRegister(!register)}>{register ? "Already have access?" : "Need access?"}</button>
             {message && <p className="error">{message}</p>}
           </div>

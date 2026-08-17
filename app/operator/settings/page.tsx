@@ -8,11 +8,14 @@ export default async function OperatorSettingsPage() {
   return (
     <main>
       <section className="section">
-        <div className="shell">
-          <div className="surface">
-            <span className="microLabel">Settings</span>
-            <h1>Operator settings.</h1>
+        <div className="shell" style={{ maxWidth: 720, margin: "0 auto" }}>
+          <div style={{ marginBottom: "var(--space-7)" }}>
+            <span className="eyebrow">Settings</span>
+            <h1 style={{ marginTop: "var(--space-3)", marginBottom: "var(--space-2)" }}>Operator settings.</h1>
             <p className="muted">Profile, pricing, fleet and availability controls are separated so sensitive regulatory data stays protected.</p>
+          </div>
+          <div style={{ background: "var(--white)", border: "var(--border)", padding: "var(--space-6)" }}>
+            <p className="muted" style={{ lineHeight: "var(--leading-relaxed)" }}>Additional operator settings will be added here. For now, use the dedicated pages for profile, pricing, fleet and availability.</p>
           </div>
         </div>
       </section>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { LuxuryButton, PriceDisplay, RouteDisplay } from "@/components/luxury";
+import { Button, PriceDisplay, RouteDisplay } from "@/components/luxury";
 
 function bookingLabel(status: string) {
   if (status === "OPERATOR_CONFIRMED") return "CONFIRMED";
@@ -56,7 +56,7 @@ export default function Booking() {
             <RouteDisplay from={booking.origin} to={booking.destination} />
             <PriceDisplay value={booking.price} label={booking.status === "CONFIRMED" ? "CONFIRMED PRICE" : "ESTIMATED PRICE"} />
             <p>Status: {bookingLabel(booking.status)}</p>
-            {booking.status === "OPERATOR_CONFIRMED" && <LuxuryButton variant="light" onClick={pay}>PAY SECURELY</LuxuryButton>}
+            {booking.status === "OPERATOR_CONFIRMED" && <Button variant="light" onClick={pay}>PAY SECURELY</Button>}
             {booking.status === "REQUESTED" && <p>Waiting for confirmation.</p>}
             {booking.status === "PAID" && <p>Payment received. Awaiting final confirmation.</p>}
             {message && <p className="error">{message}</p>}

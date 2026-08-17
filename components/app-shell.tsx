@@ -15,29 +15,29 @@ function PublicNav() {
   return (
     <>
       <header className="nav">
-        <div className="shell navInner">
-          <Link href="/" className="brand">THE PRIVATE</Link>
-          <nav className="navlinks" aria-label="Main navigation">
+        <div className="nav-inner">
+          <Link href="/" className="nav-brand">The Private</Link>
+          <nav className="nav-links" aria-label="Main navigation">
             <Link href="/search?from=Delhi&to=Dubai&pax=6">Explore</Link>
-            <Link href="/search?emptyLeg=1">Empty Legs</Link>
+            <Link href="/search?emptyLeg=1">Empty legs</Link>
             <Link href="/charter/request">Charter</Link>
             {!isLoading && isCustomer && <Link href="/trips">Trips</Link>}
           </nav>
-          <div className="navActions">
+          <div className="nav-actions">
             {isLoading ? (
-              <span className="navStatus">Loading</span>
+              <span className="muted" style={{ fontSize: "var(--text-xs)", letterSpacing: "var(--tracking-wider)", textTransform: "uppercase" }}>Loading</span>
             ) : user ? (
               <>
-                <Link className="profileChip" href={user.role === "ADMIN" ? "/admin" : user.role === "OPERATOR" ? "/operator/dashboard" : "/profile"}>
+                <Link className="profile-chip" href={user.role === "ADMIN" ? "/admin" : user.role === "OPERATOR" ? "/operator/dashboard" : "/profile"}>
                   <Initials name={user.name} />
                   <span>{user.name}</span>
                 </Link>
-                <button className="linkbtn" onClick={logout}>Sign out</button>
+                <button className="link-btn" onClick={logout}>Sign out</button>
               </>
             ) : (
               <>
-                <Link href="/login">Sign in</Link>
-                <Link className="navCta" href="/search?from=Delhi&to=Dubai&pax=6">Search aircraft</Link>
+                <Link href="/login" style={{ fontSize: "var(--text-sm)", letterSpacing: "var(--tracking-wide)", textTransform: "uppercase" }}>Sign in</Link>
+                <Link className="nav-cta" href="/search?from=Delhi&to=Dubai&pax=6">Search aircraft</Link>
               </>
             )}
           </div>
@@ -58,23 +58,26 @@ function OperatorShell({ children, initialUser }: { children: React.ReactNode; i
     ["/operator/bookings", "Bookings"],
   ];
   return (
-    <div className="appFrame">
-      <aside className="roleSidebar">
-        <Link href="/operator/dashboard" className="roleBrand"><span>THE PRIVATE</span><b>OPERATOR</b></Link>
-        <nav className="roleNav" aria-label="Operator navigation">
+    <div className="op-shell">
+      <aside className="op-sidebar">
+        <div className="op-brand">
+          <span>The Private</span>
+          <b>Operator</b>
+        </div>
+        <nav className="op-nav" aria-label="Operator navigation">
           {links.map(([href, label]) => <Link key={href} href={href}>{label}</Link>)}
         </nav>
-        <nav className="roleNav roleNavBottom" aria-label="Operator account">
+        <nav className="op-nav op-nav-bottom" aria-label="Operator account">
           <Link href="/operator/notifications">Notifications</Link>
           <Link href="/operator/settings">Settings</Link>
           <Link href="/operator/profile">Profile</Link>
         </nav>
       </aside>
-      <div className="roleMain">
-        <header className="roleTopbar">
-          <span>{user?.operatorName || user?.name || "Operator"}</span>
-          <span className="pill">{user?.operatorVerified ? "Verified" : "Pending"}</span>
-          <button className="linkbtn" onClick={logout}>Logout</button>
+      <div className="op-main">
+        <header className="op-topbar">
+          <span style={{ fontSize: "var(--text-sm)", letterSpacing: "var(--tracking-wide)" }}>{user?.operatorName || user?.name || "Operator"}</span>
+          <span className="badge badge-dark">{user?.operatorVerified ? "Verified" : "Pending"}</span>
+          <button className="link-btn" onClick={logout}>Logout</button>
         </header>
         {children}
       </div>
@@ -89,7 +92,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     ["/admin/operators", "Operators"],
     ["/admin/aircraft", "Aircraft"],
     ["/admin/claims", "Claims"],
-    ["/admin/rfqs", "RFQs"],
+    ["/admin/rfqs", "Requests"],
     ["/admin/quotes", "Quotes"],
     ["/admin/bookings", "Bookings"],
     ["/admin/users", "Users"],
@@ -98,19 +101,21 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     ["/admin/audit", "Audit"],
   ];
   return (
-    <div className="appFrame adminFrame">
-      <aside className="roleSidebar">
-        <Link href="/admin" className="roleBrand"><span>THE PRIVATE</span><b>ADMIN</b></Link>
-        <nav className="roleNav" aria-label="Admin navigation">
+    <div className="ad-shell">
+      <aside className="ad-sidebar">
+        <div className="ad-brand">
+          <span>The Private</span>
+          <b>Admin</b>
+        </div>
+        <nav className="ad-nav" aria-label="Admin navigation">
           {links.map(([href, label]) => <Link key={href} href={href}>{label}</Link>)}
         </nav>
       </aside>
-      <div className="roleMain">
-        <header className="roleTopbar">
-          <span>{user?.name || "Admin"}</span>
-          <span className="pill">Admin</span>
-          <Link href="/profile">Profile</Link>
-          <button className="linkbtn" onClick={logout}>Logout</button>
+      <div className="ad-main">
+        <header className="ad-topbar">
+          <span style={{ fontSize: "var(--text-sm)", letterSpacing: "var(--tracking-wide)" }}>{user?.name || "Admin"}</span>
+          <span className="badge badge-dark">Admin</span>
+          <button className="link-btn" onClick={logout}>Logout</button>
         </header>
         {children}
       </div>
@@ -129,12 +134,12 @@ function ShellBody({ children, initialUser }: { children: React.ReactNode; initi
   return (
     <>
       <PublicNav />
-      {children}
-      <footer className="footer">
+      <main style={{ minHeight: "calc(100svh - 72px)" }}>{children}</main>
+      <footer className="site-footer">
         <div className="shell">
-          <b>THE PRIVATE</b>
+          <b>The Private</b>
           <p>Private aviation, simplified. Search available aircraft, request charters, and manage bookings.</p>
-          <small>Estimated prices are confirmed before payment.</small>
+          <small style={{ color: "var(--muted)", fontSize: "var(--text-xs)" }}>Estimated prices are confirmed before payment.</small>
         </div>
       </footer>
     </>

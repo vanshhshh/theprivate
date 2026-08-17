@@ -9,7 +9,7 @@ export default async function OperatorQuotesPage() {
   if (user.role !== "OPERATOR" || !user.operatorId) redirect("/");
   const quotes = await db.quote.findMany({
     where: { operatorId: user.operatorId },
-    include: { aircraft: true, rfq: true },
+    include: { rfq: true, aircraft: true },
     orderBy: { createdAt: "desc" },
     take: 50,
   });
@@ -17,19 +17,29 @@ export default async function OperatorQuotesPage() {
   return (
     <main>
       <section className="section">
-        <div className="shell">
-          <div className="sectionHeading"><span>Quotes</span><h1>Submitted charter quotes.</h1></div>
-          <div className="resultList">
-            {quotes.map((quote) => (
-              <article className="surface" key={quote.id}>
-                <RouteDisplay from={quote.rfq.origin} to={quote.rfq.destination} />
-                <h2>{quote.aircraft?.model || "Aircraft to confirm"}</h2>
-                <p className="muted">Valid until {quote.validUntil.toLocaleString("en-IN")} / {quote.status}</p>
-                <PriceDisplay value={quote.price} />
-              </article>
-            ))}
-            {!quotes.length && <div className="emptyState"><h2>No quotes submitted.</h2><p>Quotes created for customer requests will appear here.</p></div>}
+        <div className="shell" style={{ maxWidth: 720, margin: "0 auto" }}>
+          <div style={{ marginBottom: "var(--space-7)" }}>
+            <span className="eyebrow">Quotes</span>
+            <h1 style={{ marginTop: "var(--space-3)", marginBottom: "var(--space-2)" }}>Submitted charter quotes.</h1>
           </div>
+          <div style={{ display: "grid", gap: 0, borderTop: "var(--border)" }}>
+            {quotes.map((quote) => (
+              <div key={quote.id} style={{ padding: "var(--space-5) 0", borderBottom: "var(--border-subtle)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: "var(--space-4)", marginBottom: "var(--space-2)" }}>
+                  <RouteDisplay from={quote.rfq.origin} to={quote.rfq.destination} />
+                  <span className="badge badge-muted">{quote.status}</span>
+                </div>
+                <div style={{ marginBottom: "var(--space-2)" }}>
+                  <b style={{ fontSize: "var(--text-base)", fontFamily: "var(--serif)", fontWeight: 500 }}>{quote.aircraft?.model || "Aircraft to confirm"}</b>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", gap: "var(--space-4)" }}>
+                  <span className="muted" style={{ fontSize: "var(--text-sm)" }}>Valid until {quote.validUntil.toLocaleString("en-US")}</span>
+                  <PriceDisplay value={quote.price} />
+                </div>
+              </div>
+            ))}
+          </div>
+          {!quotes.length && <div className="empty-state"><h3>No quotes submitted.</h3><p>Quotes created for customer requests will appear here.</p></div>}
         </div>
       </section>
     </main>

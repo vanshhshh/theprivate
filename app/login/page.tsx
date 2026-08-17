@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { LuxuryButton } from "@/components/luxury";
+import { Button } from "@/components/luxury";
 import { loungeImage } from "@/lib/media";
 
 export default function Login() {
@@ -27,21 +27,56 @@ export default function Login() {
   }
 
   return (
-    <main className="authSplit">
-      <div className="authVisual">
+    <main className="auth-split">
+      <div className="auth-visual">
         <Image src={loungeImage} alt="Private aviation lounge" fill priority sizes="50vw" />
       </div>
-      <section className="authPanel">
-        <div className="authPanelInner">
-          <div className="eyebrow">THE PRIVATE</div>
-          <h1>{register ? "Create account." : "Welcome back."}</h1>
-          <div className="authFields">
-            {register && <label>NAME<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></label>}
-            <label>EMAIL<input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
-            <label>PASSWORD<input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></label>
-            <LuxuryButton onClick={submit}>{register ? "CREATE ACCOUNT" : "CONTINUE"}</LuxuryButton>
-            <button className="linkbtn" onClick={() => setRegister(!register)}>{register ? "Sign in instead" : "Create account"}</button>
-            {message && <p className="error">{message}</p>}
+      <section className="auth-panel">
+        <div className="auth-panel-inner">
+          <span className="eyebrow">The Private</span>
+          <h1 style={{ fontSize: "clamp(36px, 4vw, 52px)", marginTop: "var(--space-3)" }}>{register ? "Create account." : "Welcome back."}</h1>
+          <p className="muted" style={{ marginTop: "var(--space-2)", lineHeight: "var(--leading-relaxed)" }}>
+            {register ? "Create your account to start searching and booking private flights." : "Sign in to access your trips and bookings."}
+          </p>
+          <div className="auth-fields">
+            {register && (
+              <label>
+                Name
+                <input
+                  className="input"
+                  value={form.name}
+                  onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  placeholder="Your full name"
+                />
+              </label>
+            )}
+            <label>
+              Email
+              <input
+                type="email"
+                className="input"
+                value={form.email}
+                onChange={(event) => setForm({ ...form, email: event.target.value })}
+                placeholder="you@example.com"
+              />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                className="input"
+                value={form.password}
+                onChange={(event) => setForm({ ...form, password: event.target.value })}
+                placeholder="••••••••"
+              />
+            </label>
+            <div style={{ marginTop: "var(--space-2)" }}>
+              <Button onClick={submit}>{register ? "Create account" : "Continue"}</Button>
+            </div>
+            <button type="button" className="link-btn" onClick={() => setRegister(!register)}>
+              {register ? "Already have an account? Sign in" : "Need an account? Create one"}
+            </button>
+            {message && <p style={{ color: "var(--error)", fontSize: "var(--text-sm)", fontWeight: 600 }}>{message}</p>}
           </div>
         </div>
       </section>

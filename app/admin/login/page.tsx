@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { LuxuryButton } from "@/components/luxury";
+import { Button } from "@/components/luxury";
 import { loungeImage } from "@/lib/media";
 
 export default function AdminLogin() {
@@ -30,18 +30,18 @@ export default function AdminLogin() {
   }
 
   return (
-    <main className="authSplit">
-      <div className="authVisual">
+    <main className="auth-split">
+      <div className="auth-visual">
         <Image src={loungeImage} alt="Private aviation lounge" fill priority sizes="50vw" />
       </div>
-      <section className="authPanel">
-        <div className="authPanelInner">
+      <section className="auth-panel">
+        <div className="auth-panel-inner">
           <div className="eyebrow">ADMIN</div>
-          <h1>Marketplace access.</h1>
-          <div className="authFields">
+          <h1 style={{ fontSize: "clamp(36px, 4vw, 52px)", marginTop: "var(--space-3)" }}>Marketplace access.</h1>
+          <div className="auth-fields">
             <label>EMAIL<input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
             <label>PASSWORD<input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></label>
-            <LuxuryButton onClick={submit}>CONTINUE</LuxuryButton>
+            <Button onClick={submit}>CONTINUE</Button>
             {message && <p className="error">{message}</p>}
           </div>
         </div>

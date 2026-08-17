@@ -56,15 +56,21 @@ function SearchContent() {
 
   return (
     <main>
-      <section className="searchHeader">
+      <section style={{ borderBottom: "var(--border)", padding: "var(--space-7) 0 var(--space-5)" }}>
         <div className="shell">
-          <div className="eyebrow">{emptyLegOnly ? "Empty legs" : "Available aircraft"}</div>
-          <h1>{emptyLegOnly ? "EMPTY LEGS" : `${findAirport(from).city.toUpperCase()} TO ${findAirport(to).city.toUpperCase()}`}</h1>
-          <div className="resultTools">
-            <div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+            <span className="eyebrow">{emptyLegOnly ? "Empty legs" : "Available aircraft"}</span>
+            <h1 style={{ fontSize: "clamp(40px, 5vw, 72px)" }}>
+              {emptyLegOnly ? "EMPTY LEGS" : `${findAirport(from).city.toUpperCase()} TO ${findAirport(to).city.toUpperCase()}`}
+            </h1>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)", flexWrap: "wrap" }}>
               <RouteDisplay from={from} to={to} />
-              <p className="muted">{label.day !== "Select" ? `${label.day} ${label.month}` : "Flexible date"} / {passengers} passengers</p>
+              <span className="muted" style={{ fontSize: "var(--text-sm)", letterSpacing: "var(--tracking-wide)" }}>
+                {label.day !== "Select" ? `${label.day} ${label.month}` : "Flexible date"} / {passengers} passengers
+              </span>
             </div>
+          </div>
+          <div style={{ marginTop: "var(--space-6)" }}>
             <SearchPanel defaultFrom={from} defaultTo={to} defaultPassengers={passengers} defaultDate={date} compact />
           </div>
         </div>
@@ -72,27 +78,23 @@ function SearchContent() {
 
       <section className="section">
         <div className="shell">
-          <div className="sectionHeading">
+          <div className="section-heading">
             <span>{loading ? "Searching" : emptyLegOnly ? `${results.length} empty legs` : `${results.length} aircraft`}</span>
-            <h2>{loading ? "Finding aircraft for your trip." : emptyLegOnly ? "CONFIRMED EMPTY LEGS" : "AVAILABLE AIRCRAFT"}</h2>
+            <h2>{loading ? "Finding aircraft for your trip." : emptyLegOnly ? "Confirmed empty legs" : "Available aircraft"}</h2>
           </div>
 
           {!loading && !results.length && (
-            <div className="emptyState">
-              <span className="microLabel">{emptyLegOnly ? "NO EMPTY LEGS" : "NO MATCHING AIRCRAFT"}</span>
-              <h2>{emptyLegOnly ? "No empty legs right now." : "We can source one for you."}</h2>
+            <div className="empty-state">
+              <span className="eyebrow" style={{ color: "var(--accent)" }}>{emptyLegOnly ? "No empty legs" : "No match"}</span>
+              <h3>{emptyLegOnly ? "No empty legs right now." : "We can source an aircraft for you."}</h3>
               <p>{emptyLegOnly ? "Try a full charter or request a quote." : "Send a quote request and we will source options for this route."}</p>
-              <button className="luxuryButton light" onClick={requestCharter} disabled={rfq}>{rfq ? "SENDING" : "REQUEST A PRIVATE CHARTER"}</button>
+              <button className="btn btn-light" onClick={requestCharter} disabled={rfq}>{rfq ? "Sending..." : "Request charter"}</button>
             </div>
           )}
 
-          <div className="resultList">
+          <div style={{ display: "grid", gap: "var(--space-5)" }}>
             {results.map((aircraft) => {
-              const params = new URLSearchParams({
-                from,
-                to,
-                pax: String(passengers),
-              });
+              const params = new URLSearchParams({ from, to, pax: String(passengers) });
               if (date) params.set("date", date);
               if (aircraft.availability?.id) params.set("availability", aircraft.availability.id);
               return (
@@ -108,14 +110,14 @@ function SearchContent() {
           </div>
 
           {!!results.length && (
-            <div className="emptyState">
-              <span className="microLabel">QUOTATION</span>
-              <h2>Need something more specific?</h2>
+            <div className="empty-state" style={{ marginTop: "var(--space-6)" }}>
+              <span className="eyebrow" style={{ color: "var(--accent)" }}>Quotation</span>
+              <h3>Need something more specific?</h3>
               <p>Send one request and compare private quote options.</p>
-              <button className="luxuryButton light" onClick={requestCharter} disabled={rfq}>{rfq ? "SENDING" : "REQUEST CHARTER"}</button>
+              <button className="btn btn-light" onClick={requestCharter} disabled={rfq}>{rfq ? "Sending..." : "Request charter"}</button>
             </div>
           )}
-          {message && <p className="notice">{message}</p>}
+          {message && <p style={{ color: "var(--accent-dark)", fontWeight: 600, marginTop: "var(--space-4)" }}>{message}</p>}
         </div>
       </section>
     </main>
