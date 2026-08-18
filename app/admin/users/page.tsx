@@ -6,7 +6,7 @@ export default async function AdminUsers() {
   const user = await getCurrentUser();
   if (!user) redirect("/admin/login");
   if (user.role !== "ADMIN") redirect("/");
-  const users = await db.user.findMany({ orderBy: { createdAt: "desc" }, take: 50 });
+  const users = await db.user.findMany({ orderBy: { createdAt: "desc" } });
 
   return (
     <main>

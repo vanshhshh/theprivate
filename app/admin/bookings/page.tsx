@@ -6,7 +6,7 @@ export default async function AdminBookings() {
   const user = await getCurrentUser();
   if (!user) redirect("/admin/login");
   if (user.role !== "ADMIN") redirect("/");
-  const bookings = await db.booking.findMany({ orderBy: { createdAt: "desc" }, take: 50, include: { user: true, aircraft: true, operator: true } });
+  const bookings = await db.booking.findMany({ orderBy: { createdAt: "desc" }, include: { user: true, aircraft: true, operator: true } });
 
   return (
     <main>

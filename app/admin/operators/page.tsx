@@ -7,7 +7,7 @@ export default async function AdminOperators() {
   const user = await getCurrentUser();
   if (!user) redirect("/admin/login");
   if (user.role !== "ADMIN") redirect("/");
-  const operators = await db.operator.findMany({ orderBy: { createdAt: "desc" }, take: 50, include: { aircraft: true } });
+  const operators = await db.operator.findMany({ orderBy: { createdAt: "desc" }, include: { aircraft: true } });
 
   return (
     <main>

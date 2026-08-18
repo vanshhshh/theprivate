@@ -6,7 +6,7 @@ export default async function AdminAviation() {
   const user = await getCurrentUser();
   if (!user) redirect("/admin/login");
   if (user.role !== "ADMIN") redirect("/");
-  const airports = await db.airport.findMany({ orderBy: { city: "asc" }, take: 50 });
+  const airports = await db.airport.findMany({ orderBy: { city: "asc" } });
 
   return (
     <main>

@@ -6,7 +6,7 @@ export default async function AdminAvailability() {
   const user = await getCurrentUser();
   if (!user) redirect("/admin/login");
   if (user.role !== "ADMIN") redirect("/");
-  const listings = await db.availability.findMany({ orderBy: { createdAt: "desc" }, take: 50, include: { aircraft: true, operator: true } });
+  const listings = await db.availability.findMany({ orderBy: { createdAt: "desc" }, include: { aircraft: true, operator: true } });
 
   return (
     <main>

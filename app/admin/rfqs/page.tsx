@@ -6,7 +6,7 @@ export default async function AdminRfqs() {
   const user = await getCurrentUser();
   if (!user) redirect("/admin/login");
   if (user.role !== "ADMIN") redirect("/");
-  const rfqs = await db.rfq.findMany({ orderBy: { createdAt: "desc" }, take: 50, include: { user: true } });
+  const rfqs = await db.rfq.findMany({ orderBy: { createdAt: "desc" }, include: { user: true } });
 
   return (
     <main>

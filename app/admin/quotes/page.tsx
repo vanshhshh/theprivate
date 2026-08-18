@@ -6,7 +6,7 @@ export default async function AdminQuotes() {
   const user = await getCurrentUser();
   if (!user) redirect("/admin/login");
   if (user.role !== "ADMIN") redirect("/");
-  const quotes = await db.quote.findMany({ orderBy: { createdAt: "desc" }, take: 50, include: { rfq: true, operator: true } });
+  const quotes = await db.quote.findMany({ orderBy: { createdAt: "desc" }, include: { rfq: true, operator: true } });
 
   return (
     <main>

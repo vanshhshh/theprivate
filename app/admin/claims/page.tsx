@@ -6,7 +6,7 @@ export default async function AdminClaims() {
   const user = await getCurrentUser();
   if (!user) redirect("/admin/login");
   if (user.role !== "ADMIN") redirect("/");
-  const claims = await db.claim.findMany({ orderBy: { createdAt: "desc" }, take: 50, include: { operator: { include: { aircraft: true } } } });
+  const claims = await db.claim.findMany({ orderBy: { createdAt: "desc" }, include: { operator: { include: { aircraft: true } } } });
 
   return (
     <main>
