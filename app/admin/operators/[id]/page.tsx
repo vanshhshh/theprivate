@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/prisma";
 import { Button } from "@/components/luxury";
+import { InviteButton } from "@/components/invite-button";
 
 export default async function AdminOperatorDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -39,9 +40,10 @@ export default async function AdminOperatorDetail({ params }: { params: Promise<
                 <span style={{ fontSize: "var(--text-sm)", fontWeight: 600 }}>{operator.claimed ? "Claimed" : "Unclaimed"}</span>
               </div>
             </div>
-            <div style={{ marginTop: "var(--space-5)", display: "flex", gap: "var(--space-3)" }}>
+            <div style={{ marginTop: "var(--space-5)", display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
               <Button href={`/operator/${operator.id}`} variant="light">Public profile</Button>
               <Button href="/admin/operators" variant="ghost">All operators</Button>
+              <InviteButton operatorId={operator.id} />
             </div>
           </div>
           <aside style={{ background: "var(--white)", border: "var(--border)", padding: "var(--space-6)" }}>
