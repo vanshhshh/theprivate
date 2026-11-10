@@ -103,7 +103,7 @@ export default async function ClaimInvitation({ params }: { params: Promise<{ to
             ) : (
               <ClaimForm token={token} company={c.name} />
             )}
-            {view.expiresAt && !blocked && <p className="mt-6 text-[13px] text-paper/50">This link is personal to {c.name} and expires on {view.expiresAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.</p>}
+            {!blocked && <p className="mt-6 text-[13px] text-paper/50">This link is personal to {c.name}.</p>}
           </div>
         </aside>
       </div>

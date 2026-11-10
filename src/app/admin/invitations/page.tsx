@@ -39,7 +39,7 @@ export default async function Invitations({ searchParams }: { searchParams: Prom
             <dt className="text-muted">Server</dt><dd className="strip">{m.host ? `${m.host}:${m.port}${m.secure ? ' (TLS)' : ''}` : '—'}</dd>
             <dt className="text-muted">From</dt><dd>{m.from ?? '—'}</dd>
             <dt className="text-muted">Reply-to</dt><dd>{m.replyTo ?? 'same as From'}</dd>
-            <dt className="text-muted">Link expiry</dt><dd>{cfg.expiryDays} days</dd>
+            <dt className="text-muted">Link expiry</dt><dd>{cfg.expiryDays > 0 ? `${cfg.expiryDays} days` : 'Never (revoke to withdraw)'}</dd>
             <dt className="text-muted">Pace</dt><dd>one every {cfg.intervalSeconds}s, at most {cfg.dailyCap} per 24 h</dd>
           </dl>
           {m.configured && (

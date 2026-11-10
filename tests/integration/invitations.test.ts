@@ -105,7 +105,7 @@ describe('company invitations (test database)', () => {
     expect(await prisma.operatorMembership.count({ where: { operatorId: op.id } })).toBe(0);
     expect((await prisma.operator.findUniqueOrThrow({ where: { id: op.id } })).lifecycle).toBe('DISCOVERED'); // not verified
     expect((await prisma.operatorInvitation.findUniqueOrThrow({ where: { id: inv.id } })).status).toBe('CLAIMED');
-    await expect(svc.claimViaInvitation(owner, { token, claimantRole: 'Director', authorised: 'yes' })).rejects.toThrow(/expired, been used or been withdrawn/); // replay
+    await expect(svc.claimViaInvitation(owner, { token, claimantRole: 'Director', authorised: 'yes' })).rejects.toThrow(/already been used or has been withdrawn/); // replay
   });
 
   it("binds a link to its own company: one company's token can never claim another", async () => {
@@ -128,9 +128,12 @@ describe('company invitations (test database)', () => {
     const op = await company('g', email);
     const { token, inv } = await sendOne(op.id, admin);
     const user = viewerOf(await prisma.user.create({ data: { email, name: 'G' } }));
+    // By default links never expire; an explicit expiry (INVITE_EXPIRY_DAYS) is still honoured.
+    expect((await prisma.operatorInvitation.findUniqueOrThrow({ where: { id: inv.id } })).expiresAt).toBeNull();
+    expect((await svc.viewInvitation(token)).state).toBe('valid');
     await prisma.operatorInvitation.update({ where: { id: inv.id }, data: { expiresAt: new Date(Date.now() - 1000) } });
     expect((await svc.viewInvitation(token)).state).toBe('expired');
-    await expect(svc.claimViaInvitation(user, { token, claimantRole: 'CEO', authorised: 'yes' })).rejects.toThrow(/expired/);
+    await expect(svc.claimViaInvitation(user, { token, claimantRole: 'CEO', authorised: 'yes' })).rejects.toThrow();
     await prisma.operatorInvitation.update({ where: { id: inv.id }, data: { expiresAt: new Date(Date.now() + 86_400_000) } });
     await svc.revokeInvitation(admin, inv.id, 'test');
     expect((await svc.viewInvitation(token)).state).toBe('revoked');

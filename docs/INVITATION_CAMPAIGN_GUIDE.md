@@ -62,7 +62,7 @@ Recipient local parts are redacted here.
 > Once claimed, you can open your company workspace, update your information and begin onboarding. Receiving this invitation does not verify or publish your profile: you stay in control of what you submit, and our team reviews the required details before anything is activated.
 >
 > Review and claim your company profile: *(unique link)*
-> This link is personal to AR Airways Pvt. Ltd. and expires on *(date)*.
+> This link is personal to AR Airways Pvt. Ltd.
 >
 > If this has reached the wrong person, just reply and let us know.
 >

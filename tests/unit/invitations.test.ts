@@ -68,7 +68,7 @@ describe('eligibility', () => {
 });
 
 const facts = (o: Partial<InvitationFacts> = {}): InvitationFacts => ({ companyName: 'Skyline Aviation Pvt. Ltd.', countryCode: 'IN', place: null, websiteDomain: 'skyline.aero', source: 'REGULATOR', publicAircraftCount: 0, recipientName: null, recipientEmail: 'ops@skyline.aero', ...o });
-const links = { claimUrl: 'https://theprivate.in/claim/TOKEN', unsubscribeUrl: 'https://theprivate.in/unsubscribe?e=x&s=y', expiresAt: new Date('2026-12-01T00:00:00Z'), appUrl: 'https://theprivate.in' };
+const links = { claimUrl: 'https://theprivate.in/claim/TOKEN', unsubscribeUrl: 'https://theprivate.in/unsubscribe?e=x&s=y', appUrl: 'https://theprivate.in' };
 const sender = { name: 'ThePrivate', postalAddress: 'ThePrivate, 1 Example Road, Mumbai', replyTo: null };
 
 describe('personalised invitation', () => {
@@ -84,11 +84,12 @@ describe('personalised invitation', () => {
     expect(named.text).not.toMatch(/aircraft linked/);
     expect(composeInvitation(facts({ publicAircraftCount: 3 }), links, sender).text).toContain('3 aircraft linked to Skyline');
   });
-  it('states why it was received, that claiming is not verification, expiry, sender and unsubscribe', () => {
+  it('states why it was received, that claiming is not verification, sender and unsubscribe, and never mentions expiry', () => {
     const m = composeInvitation(facts(), links, sender);
     expect(m.text).toContain(whyReceiving(facts()));
     expect(m.text).toMatch(/does not verify or publish/);
-    expect(m.text).toContain('expires on 1 December 2026');
+    expect(m.text).not.toMatch(/expir/i);
+    expect(m.html).not.toMatch(/expir/i);
     expect(m.text).toContain('ThePrivate, 1 Example Road, Mumbai');
     expect(m.text).toContain(links.unsubscribeUrl);
     expect(m.html).toContain('href="https://theprivate.in/claim/TOKEN"');

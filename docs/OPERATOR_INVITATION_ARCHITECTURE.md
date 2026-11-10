@@ -69,8 +69,8 @@ It has been applied to the **local** development and test databases only. It has
 | No plaintext tokens at rest | Only `sha256(token)` is stored. The raw token exists in memory for the time it takes to send. |
 | Token carries nothing | No company id, e-mail or database id in the URL, so editing the URL cannot target another company |
 | Bound to one company and one address | The invitation row links exactly one company and one e-mail; the claim requires a session with that exact e-mail |
-| Expiry | `INVITE_EXPIRY_DAYS` (21 by default); checked on view and in the claim's conditional update; a sweep marks expired rows |
-| Single use and no replay | The claim is `UPDATE … WHERE status IN (SENT…) AND expiresAt > now() AND revokedAt IS NULL`; only one request can win |
+| Expiry | **Links never expire by default** (owner decision, 2026-11-10; `expiresAt` is null). Revoking withdraws a link. An expiry can be reintroduced with `INVITE_EXPIRY_DAYS`, and is then checked on view, in the claim's conditional update and by a sweep. |
+| Single use and no replay | The claim is `UPDATE … WHERE status IN (SENT…) AND (expiresAt IS NULL OR expiresAt > now()) AND revokedAt IS NULL`; only one request can win |
 | Revocable | Staff revoke; the link then reports "withdrawn" and cannot be claimed |
 | Resend kills the old link | The token hash is cleared and a new token is issued at send time |
 | Mail scanners cannot consume links | GET only renders the page (it records the first visit, never changes status); claiming is a signed-in POST |
@@ -110,7 +110,6 @@ Phrasing varies by a stable per-company seed across two or three variants per pa
 Every e-mail includes:
 - why it was received;
 - that claiming does not verify or publish anything;
-- the link expiry;
 - a "wrong person" line;
 - the sender's identity and postal address;
 - `List-Unsubscribe` with one-click (RFC 8058) and a mailto fallback.

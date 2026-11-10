@@ -21,8 +21,7 @@ export default async function Campaign({ params }: { params: Promise<{ id: strin
   const samples = camp.invitations.filter((i) => i.status === 'READY').slice(0, 3).flatMap((i) => {
     const f = candidates.get(i.operatorId)?.facts;
     if (!f) return [];
-    const expires = new Date(Date.now() + 21 * 86_400_000);
-    return [composeInvitation({ ...f, recipientEmail: i.email, recipientName: i.recipientName }, { claimUrl: 'https://theprivate.in/claim/<unique-link>', unsubscribeUrl: 'https://theprivate.in/unsubscribe?…', expiresAt: expires, appUrl: 'https://theprivate.in' }, { name: 'ThePrivate', postalAddress: process.env.SENDER_POSTAL_ADDRESS ?? '[sender postal address]', replyTo: null })];
+    return [composeInvitation({ ...f, recipientEmail: i.email, recipientName: i.recipientName }, { claimUrl: 'https://theprivate.in/claim/<unique-link>', unsubscribeUrl: 'https://theprivate.in/unsubscribe?…', appUrl: 'https://theprivate.in' }, { name: 'ThePrivate', postalAddress: process.env.SENDER_POSTAL_ADDRESS ?? '[sender postal address]', replyTo: null })];
   });
 
   return (

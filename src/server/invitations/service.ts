@@ -17,7 +17,8 @@ export function inviteConfig() {
   const n = (k: string, d: number) => (Number.isFinite(Number(process.env[k])) && process.env[k] ? Number(process.env[k]) : d);
   return {
     appUrl: (process.env.PUBLIC_APP_URL || process.env.BETTER_AUTH_URL || 'http://localhost:3000').replace(/\/$/, ''),
-    expiryDays: n('INVITE_EXPIRY_DAYS', 21),
+    // 0 (the default) = links never expire. Revocation still withdraws a link at any time.
+    expiryDays: n('INVITE_EXPIRY_DAYS', 0),
     /** Real recipients can be e-mailed only when this is exactly "true". Default: off. */
     liveSendEnabled: process.env.LIVE_SEND_ENABLED === 'true',
     intervalSeconds: n('INVITE_SEND_INTERVAL_SECONDS', 45),
@@ -90,13 +91,18 @@ export async function listCandidates(tx: Tx | typeof prisma = prisma): Promise<C
   });
 }
 
-function links(rawToken: string | null, email: string, expiresAt: Date) {
+/** When a link issued now stops working, or null when links never expire (the default). */
+function linkExpiry(): Date | null {
+  const days = inviteConfig().expiryDays;
+  return days > 0 ? new Date(Date.now() + days * 86_400_000) : null;
+}
+
+function links(rawToken: string | null, email: string) {
   const c = inviteConfig();
   const u = unsubscribeParams(email);
   return {
     claimUrl: rawToken ? `${c.appUrl}/claim/${rawToken}` : `${c.appUrl}/claim/<unique-link-generated-at-send>`,
     unsubscribeUrl: `${c.appUrl}/unsubscribe?e=${u.e}&s=${u.s}`,
-    expiresAt,
     appUrl: c.appUrl,
   };
 }
@@ -122,8 +128,7 @@ export async function previewFor(operatorId: string) {
   const c = all.find((x) => x.operatorId === operatorId);
   if (!c) throw notFound('Company');
   if (!c.facts) return { candidate: c, email: null };
-  const expires = new Date(Date.now() + inviteConfig().expiryDays * 86_400_000);
-  return { candidate: c, email: composeInvitation(c.facts, links(null, c.facts.recipientEmail, expires), sender()) };
+  return { candidate: c, email: composeInvitation(c.facts, links(null, c.facts.recipientEmail), sender()) };
 }
 
 async function event(tx: Tx | typeof prisma, invitationId: string, type: string, actorUserId: string | null, detail?: Record<string, unknown>) {
@@ -147,16 +152,16 @@ export async function sendTestInvitation(viewer: Viewer, operatorId: string, to:
   const c = all.find((x) => x.operatorId === operatorId);
   if (!c?.facts) throw new AppError('VALIDATION', 'This company has no usable business address, so there is nothing to preview.');
   const { raw, hash } = newToken();
-  const expiresAt = new Date(Date.now() + inviteConfig().expiryDays * 86_400_000);
+  const expiresAt = linkExpiry();
   const inv = await prisma.operatorInvitation.create({ data: { operatorId, email: target, recipientName: c.facts.recipientName, tokenHash: hash, status: 'READY', isTest: true, expiresAt, createdById: viewer.user.id } });
   // The test shows exactly what the company would receive, addressed to the staff inbox.
-  const composed = composeInvitation({ ...c.facts }, links(raw, c.facts.recipientEmail, expiresAt), sender());
+  const composed = composeInvitation({ ...c.facts }, links(raw, c.facts.recipientEmail), sender());
   try {
     const res = await sendEmail({ to: target, subject: `[TEST] ${composed.subject}`, text: composed.text, html: composed.html, headers: listHeaders(target, inv.id) });
     await prisma.operatorInvitation.update({ where: { id: inv.id }, data: { status: 'TEST_SENT', sentAt: new Date(), providerMessageId: res.messageId, sendAttempts: 1 } });
     await event(prisma, inv.id, 'test_sent', viewer.user.id, { to: target, messageId: res.messageId });
     await audit({ actorUserId: viewer.user.id, action: 'invitation.test_send', entityType: 'OperatorInvitation', entityId: inv.id, after: { operatorId, to: target } });
-    return { ok: true as const, messageId: res.messageId, claimUrl: links(raw, target, expiresAt).claimUrl };
+    return { ok: true as const, messageId: res.messageId, claimUrl: links(raw, target).claimUrl };
   } catch (err) {
     const e = err instanceof SendError ? err : new SendError('UNKNOWN', 'Sending failed.');
     await prisma.operatorInvitation.update({ where: { id: inv.id }, data: { status: 'FAILED', lastError: e.message, sendAttempts: 1 } });
@@ -307,10 +312,10 @@ export async function processInvitationJob(invitationId: string) {
     return { skipped: true };
   }
   const { raw, hash } = newToken();
-  const expiresAt = new Date(Date.now() + cfg.expiryDays * 86_400_000);
+  const expiresAt = linkExpiry();
   const claimed = await prisma.operatorInvitation.updateMany({ where: { id: inv.id, status: 'QUEUED' }, data: { status: 'SENDING', tokenHash: hash, expiresAt, sendAttempts: { increment: 1 } } });
   if (!claimed.count) return { skipped: true };
-  const composed = composeInvitation({ ...cand.facts, recipientEmail: inv.email, recipientName: inv.recipientName }, links(raw, inv.email, expiresAt), sender());
+  const composed = composeInvitation({ ...cand.facts, recipientEmail: inv.email, recipientName: inv.recipientName }, links(raw, inv.email), sender());
   try {
     const res = await sendEmail({ to: inv.email, subject: composed.subject, text: composed.text, html: composed.html, headers: listHeaders(inv.email, inv.id) });
     await prisma.operatorInvitation.update({ where: { id: inv.id }, data: { status: 'SENT', sentAt: new Date(), providerMessageId: res.messageId, lastError: null } });
@@ -380,7 +385,7 @@ export async function viewInvitation(raw: string): Promise<InvitationView> {
   if (inv.status === 'REVOKED') return { state: 'revoked', ...base };
   if (inv.status === 'UNSUBSCRIBED') return { state: 'unsubscribed', ...base };
   if (inv.status === 'CLAIMED') return { state: 'claimed', ...base };
-  if (inv.status === 'EXPIRED' || !inv.expiresAt || inv.expiresAt <= new Date()) return { state: 'expired', ...base };
+  if (inv.status === 'EXPIRED' || (inv.expiresAt && inv.expiresAt <= new Date())) return { state: 'expired', ...base };
   if (!['SENT', 'DELIVERED', 'OPENED'].includes(inv.status)) return { state: 'invalid' };
   if (o._count.memberships > 0) return { state: 'has_owner', ...base };
   return { state: 'valid', ...base };
@@ -414,10 +419,10 @@ export async function claimViaInvitation(viewer: Viewer, raw: unknown) {
 
   return prisma.$transaction(async (tx) => {
     const used = await tx.operatorInvitation.updateMany({
-      where: { id: inv.id, status: { in: ['SENT', 'DELIVERED', 'OPENED'] }, isTest: false, revokedAt: null, expiresAt: { gt: new Date() } },
+      where: { id: inv.id, status: { in: ['SENT', 'DELIVERED', 'OPENED'] }, isTest: false, revokedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
       data: { status: 'CLAIMED', claimedAt: new Date(), claimedByUserId: viewer.user.id },
     });
-    if (!used.count) throw new AppError('INVALID_STATE', 'This invitation has expired, been used or been withdrawn.');
+    if (!used.count) throw new AppError('INVALID_STATE', 'This invitation has already been used or has been withdrawn.');
     const claim = await tx.operatorClaim.create({
       data: { operatorId: inv.operatorId, userId: viewer.user.id, claimantRole: input.claimantRole, workEmail: inv.email, workPhone: input.workPhone || null, message: reviewNotes.join(' ') },
     });

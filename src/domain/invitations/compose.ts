@@ -21,7 +21,6 @@ export interface InvitationFacts {
 export interface InvitationLinks {
   claimUrl: string;
   unsubscribeUrl: string;
-  expiresAt: Date;
   appUrl: string; // https://theprivate.in
 }
 
@@ -112,8 +111,7 @@ export function composeInvitation(f: InvitationFacts, links: InvitationLinks, se
 
   const after = `Once claimed, you can open your company workspace, update your information and begin onboarding. Receiving this invitation does not verify or publish your profile: you stay in control of what you submit, and our team reviews the required details before anything is activated.`;
 
-  const expires = links.expiresAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-  const linkNote = `This link is personal to ${name} and expires on ${expires}.`;
+  const linkNote = `This link is personal to ${name}.`;
   const wrong = pick(
     [`If this has reached the wrong person, just reply and let us know.`, `If you are not the right person for this, a quick reply telling us so is very welcome.`],
     s,
