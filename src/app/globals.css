@@ -1,0 +1,384 @@
+@import 'tailwindcss';
+
+/* ============================================================================================
+   ThePrivate design tokens: "Sectional".
+   Chart paper, ink, sectional blue and a single magenta accent drawn from VFR charts.
+   Status colours carry meaning (indicative / verified / unconfirmed), never decoration.
+   ============================================================================================ */
+
+@theme {
+  --color-paper: #f3f0e8;
+  --color-paper-2: #ebe7dc;
+  --color-paper-3: #e1dccf;
+  --color-ink: #111518;
+  --color-ink-2: #2b3137;
+  --color-muted: #646a71;
+  --color-line: #d6d0c2;
+  --color-line-strong: #b9b2a2;
+  --color-sectional: #1f3b57;
+  --color-sectional-2: #2e5578;
+  --color-magenta: #a3245c;
+  --color-magenta-2: #8a1d4d;
+  --color-night: #0e1418;
+  --color-night-2: #172128;
+  --color-night-line: #26323b;
+  /* From the film's sky plate: horizon glow and upper-sky haze. Sparse accents on dark only. */
+  --color-dusk: #e2b07a;
+  --color-haze: #c8d3dc;
+
+  --color-verified: #2f6f52;
+  --color-verified-bg: #e3eee7;
+  --color-indicative: #9a6412;
+  --color-indicative-bg: #f4e9d3;
+  --color-unconfirmed: #5d646b;
+  --color-unconfirmed-bg: #e4e2dc;
+  --color-danger: #a33a2c;
+  --color-danger-bg: #f5e1dd;
+
+  --font-display: var(--font-newsreader), 'Iowan Old Style', Georgia, serif;
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, 'SFMono-Regular', monospace;
+
+  --ease-climb: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-approach: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --animate-draw: draw 1.4s var(--ease-climb) forwards;
+  --animate-rise: rise 0.42s var(--ease-climb) both;
+
+  @keyframes draw {
+    from { stroke-dashoffset: var(--len, 1000); }
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+:root {
+  --dur-1: 120ms;
+  --dur-2: 220ms;
+  --dur-3: 420ms;
+  --dur-4: 800ms;
+  color-scheme: light;
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+::selection {
+  background: var(--color-magenta);
+  color: var(--color-paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-magenta);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Display type: editorial, optically sized. */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+}
+
+/* "Strip" data: codes, registrations, times. Tabular and slightly tracked. */
+.font-mono,
+.strip {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Chart paper grain + graticule used on hero/empty states. Pure CSS, no images. */
+.chart-graticule {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-sectional) 9%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-sectional) 9%, transparent) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+/* Ruled panels instead of floating cards. */
+.ruled {
+  border-top: 1px solid var(--color-ink);
+}
+
+/* Scroll-driven parallax (compositor only). Falls back to static where unsupported. */
+@supports (animation-timeline: scroll()) {
+  .parallax-slow {
+    animation: parallax-slow linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 100vh;
+  }
+  .parallax-fast {
+    animation: parallax-fast linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 100vh;
+  }
+}
+@keyframes parallax-slow {
+  to { transform: translate3d(0, 6vh, 0); }
+}
+@keyframes parallax-fast {
+  to { transform: translate3d(0, 16vh, 0); }
+}
+
+/* Scroll-driven reveal: visible by default; animated only where view timelines exist. */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal-in linear both;
+    animation-timeline: view();
+    animation-range: entry calc(var(--reveal-i, 0) * 4%) entry calc(55% + var(--reveal-i, 0) * 4%);
+  }
+}
+@keyframes reveal-in {
+  from { opacity: 0; transform: translate3d(0, 18px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ============================================================================================
+   Cinematic layer (see docs/DESIGN_SYSTEM.md and docs/MOTION_SYSTEM.md).
+   Scene = photograph in the film's grade; Chart = paper. Glass only where work floats on a photo.
+   ============================================================================================ */
+
+:root {
+  --dur-scene: 1200ms;
+}
+
+/* Header: glass paper by default; transparent with paper type while it floats over a scene
+   (the film sets data-film, SceneHero sets data-header). */
+.site-header {
+  view-transition-name: site-header;
+  transition: background-color var(--dur-3) var(--ease-approach), border-color var(--dur-3), color var(--dur-3), backdrop-filter var(--dur-3);
+}
+html:is([data-film='on'], [data-header='over']) .site-header {
+  background: transparent;
+  border-color: transparent;
+  backdrop-filter: none;
+}
+html:is([data-film='on'], [data-header='over']) .site-header :is(a, button, span) {
+  color: var(--color-paper);
+  border-color: color-mix(in oklab, var(--color-paper) 55%, transparent);
+}
+html:is([data-film='on'], [data-header='over']) .site-header .header-cta {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+html:is([data-film='on'], [data-header='over']) .site-header .header-cta:hover {
+  background: var(--color-magenta);
+  color: var(--color-paper);
+}
+html:is([data-film='on'], [data-header='over']) .site-header button > span.h-px {
+  background: var(--color-paper);
+}
+
+/* Pending navigation: a dusk hairline draws under the link immediately (useLinkStatus). */
+.nav-pending {
+  position: absolute;
+  inset: auto 0 -3px 0;
+  height: 1px;
+  transform-origin: left;
+  transform: scaleX(0);
+  background: var(--color-magenta);
+}
+.nav-pending.is-pending {
+  animation: nav-pending 1.1s var(--ease-climb) infinite;
+}
+@keyframes nav-pending {
+  from { transform: scaleX(0); opacity: 1; }
+  70% { transform: scaleX(1); opacity: 1; }
+  to { transform: scaleX(1); opacity: 0; }
+}
+
+/* Glass: translucent working surfaces over photography. Used sparingly. */
+.glass {
+  background: color-mix(in oklab, var(--color-paper) 78%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(1.15);
+  backdrop-filter: blur(24px) saturate(1.15);
+  border: 1px solid color-mix(in oklab, var(--color-paper) 70%, transparent);
+  box-shadow: 0 30px 80px -40px rgb(14 20 24 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.5);
+}
+.glass-dark {
+  background: color-mix(in oklab, var(--color-night) 52%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+  backdrop-filter: blur(22px) saturate(1.2);
+  border: 1px solid rgb(243 240 232 / 0.16);
+  box-shadow: 0 30px 80px -40px rgb(0 0 0 / 0.6);
+}
+
+/* Scene grade: legibility for type over photographs, weighted to the bottom like the film. */
+.scene-grade {
+  background:
+    linear-gradient(180deg, rgb(14 20 24 / 0.42) 0%, rgb(14 20 24 / 0) 22%),
+    linear-gradient(0deg, rgb(14 20 24 / 0.78) 0%, rgb(14 20 24 / 0.2) 48%, rgb(14 20 24 / 0) 70%),
+    radial-gradient(120% 90% at 50% 40%, rgb(14 20 24 / 0) 55%, rgb(14 20 24 / 0.38) 100%);
+}
+
+/* Scene settle: the photograph eases into place once, like the camera finding its mark. */
+.scene-settle {
+  animation: scene-settle 1.8s var(--ease-climb) both;
+}
+@keyframes scene-settle {
+  from { transform: scale(1.07); filter: brightness(0.82); }
+  to { transform: scale(1); filter: none; }
+}
+
+/* Title resolve: words clear out of blur, staggered (the film's type treatment). CSS only. */
+.resolve > .w {
+  display: inline-block;
+  white-space: pre;
+  animation: resolve 1.2s var(--ease-climb) both;
+  animation-delay: calc(180ms + var(--i, 0) * 70ms);
+}
+.resolve-late {
+  animation: rise 900ms var(--ease-climb) both;
+  animation-delay: 560ms;
+}
+@keyframes resolve {
+  from { opacity: 0; filter: blur(14px); transform: translate3d(0, 16px, 0); }
+  to { opacity: 1; filter: blur(0); transform: none; }
+}
+
+/* Scene parallax: photo and type drift at different speeds while the scene is in view. */
+@supports (animation-timeline: view()) {
+  .scene-photo-drift {
+    animation: drift-photo linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  .scene-type-drift {
+    animation: drift-type linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  /* Image reveal: uncovers from the bottom as it enters, then settles. */
+  .img-reveal {
+    animation: img-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 70%;
+  }
+}
+@keyframes drift-photo {
+  to { transform: translate3d(0, 18%, 0); }
+}
+@keyframes drift-type {
+  to { transform: translate3d(0, 32%, 0); opacity: 0; }
+}
+@keyframes img-reveal {
+  from { clip-path: inset(18% 0 0 0); transform: scale(1.06); }
+  to { clip-path: inset(0); transform: none; }
+}
+@media (max-width: 767px) {
+  @keyframes drift-photo {
+    to { transform: translate3d(0, 9%, 0); }
+  }
+}
+
+/* Journey arc draws itself (left to right) as it enters the viewport. Solid stroke, clip reveal. */
+@supports (animation-timeline: view()) {
+  .journey-arc {
+    animation: arc-draw linear both;
+    animation-timeline: view();
+    animation-range: entry 10% entry 90%;
+  }
+}
+@keyframes arc-draw {
+  from { clip-path: inset(-50% 100% -50% -2%); }
+  to { clip-path: inset(-50% -2% -50% -2%); }
+}
+
+/* Editorial link: underline draws from the left. */
+.link-draw {
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+  transition: background-size var(--dur-3) var(--ease-climb);
+}
+.link-draw:hover,
+.link-draw:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* Arrow micro-motion in buttons and links. */
+.arrow {
+  display: inline-block;
+  transition: transform var(--dur-3) var(--ease-climb);
+}
+:is(a, button):hover > .arrow {
+  transform: translateX(3px);
+}
+
+/* Page entrance used where view transitions are unavailable (and by consoles). */
+.page-enter {
+  animation: rise var(--dur-3) var(--ease-climb) both;
+}
+
+/* Scene cut: route transitions (React <ViewTransition default="scene"> in template.tsx). */
+::view-transition-old(.scene) {
+  animation: scene-out 260ms var(--ease-approach) both;
+}
+::view-transition-new(.scene) {
+  animation: scene-in 520ms var(--ease-climb) 120ms both;
+}
+::view-transition-old(.fade) {
+  animation: fade-out 120ms linear both;
+}
+::view-transition-new(.fade) {
+  animation: fade-in 160ms linear both;
+}
+::view-transition-group(site-header),
+::view-transition-old(site-header),
+::view-transition-new(site-header) {
+  animation: none;
+}
+@keyframes scene-out {
+  to { opacity: 0; filter: blur(4px); transform: scale(0.99); }
+}
+@keyframes scene-in {
+  from { opacity: 0; filter: blur(6px); transform: scale(1.01); }
+  to { opacity: 1; filter: none; transform: none; }
+}
+@keyframes fade-out {
+  to { opacity: 0; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  .parallax-slow,
+  .parallax-fast,
+  .reveal,
+  .scene-settle,
+  .scene-photo-drift,
+  .scene-type-drift,
+  .img-reveal,
+  .journey-arc,
+  .resolve > .w,
+  .resolve-late {
+    animation: none !important;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

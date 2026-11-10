@@ -1,0 +1,1568 @@
+// ThePrivate — relational schema (PostgreSQL)
+//
+// Conventions
+// - cuid primary keys; `createdAt`/`updatedAt` timestamptz everywhere.
+// - Money: Decimal(14,2) + ISO-4217 `currency` char(3). Never floats.
+// - Instants are timestamptz (UTC). Local flight times are stored as local date + wall-clock time
+//   next to the airport (whose IANA timezone is on Airport), plus the computed UTC instant.
+// - Every lifecycle is an explicit enum; transitions are enforced in src/domain/**/lifecycle.ts.
+// - Soft delete (`deletedAt`) on user-facing business entities only.
+// - Confidential columns are marked `/// CONFIDENTIAL` and must never reach customer-facing DTOs.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =====================================================================================
+// Geography
+// =====================================================================================
+
+model Country {
+  code      String   @id @db.Char(2) // ISO 3166-1 alpha-2
+  name      String
+  currency  String?  @db.Char(3)
+  dialCode  String?
+  isLaunchMarket Boolean @default(false)
+  regions   Region[]
+  airports  Airport[]
+  operators Operator[]
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model Region {
+  id          String   @id @default(cuid())
+  countryCode String   @db.Char(2)
+  code        String // ISO 3166-2 subdivision, e.g. IN-MH, AE-DU
+  name        String
+  country     Country  @relation(fields: [countryCode], references: [code])
+  airports    Airport[]
+
+  @@unique([countryCode, code])
+}
+
+enum AirportKind {
+  LARGE_AIRPORT
+  MEDIUM_AIRPORT
+  SMALL_AIRPORT
+  HELIPORT
+  SEAPLANE_BASE
+  BALLOONPORT
+  CLOSED
+}
+
+model Airport {
+  id               String      @id @default(cuid())
+  icao             String?     @unique @db.VarChar(4)
+  iata             String?     @db.VarChar(3)
+  localCode        String?
+  name             String
+  city             String?
+  countryCode      String      @db.Char(2)
+  regionId         String?
+  kind             AirportKind
+  latitude         Decimal     @db.Decimal(9, 6)
+  longitude        Decimal     @db.Decimal(9, 6)
+  elevationFt      Int?
+  timezone         String? // IANA, e.g. Asia/Kolkata
+  longestRunwayFt  Int?
+  hasScheduledService Boolean  @default(false)
+  searchRank       Int         @default(0) // larger first: large > medium > small; launch markets boosted
+  isActive         Boolean     @default(true)
+  searchText       String // lower-cased "icao iata name city", indexed for prefix/trigram search
+  sourceRef        String? // e.g. "ourairports:12345"
+  country          Country     @relation(fields: [countryCode], references: [code])
+  region           Region?     @relation(fields: [regionId], references: [id])
+  createdAt        DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime    @updatedAt @db.Timestamptz(3)
+
+  rfqLegsFrom      RfqLeg[]    @relation("RfqLegFrom")
+  rfqLegsTo        RfqLeg[]    @relation("RfqLegTo")
+  bookingLegsFrom  BookingLeg[] @relation("BookingLegFrom")
+  bookingLegsTo    BookingLeg[] @relation("BookingLegTo")
+  emptyLegsFrom    EmptyLegListing[] @relation("EmptyLegFrom")
+  emptyLegsTo      EmptyLegListing[] @relation("EmptyLegTo")
+  aircraftBased    Aircraft[]
+  availabilityBase AircraftAvailability[]
+
+  @@index([iata])
+  @@index([countryCode, kind])
+  @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin, map: "Airport_searchText_trgm_idx")
+}
+
+// =====================================================================================
+// Identity & access (Better Auth core tables + platform roles)
+// =====================================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  name          String
+  image         String?
+  phone         String?
+  locale        String    @default("en-IN")
+  timezone      String    @default("Asia/Kolkata")
+  createdAt     DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt     DateTime? @db.Timestamptz(3)
+  disabledAt    DateTime? @db.Timestamptz(3)
+
+  sessions        Session[]
+  accounts        Account[]
+  customerProfile CustomerProfile?
+  staffRoles      StaffRoleAssignment[] @relation("StaffRoleUser")
+  staffRolesGranted StaffRoleAssignment[] @relation("StaffRoleGrantedBy")
+  memberships     OperatorMembership[]
+  claims          OperatorClaim[]       @relation("ClaimUser")
+  claimsReviewed  OperatorClaim[]       @relation("ClaimReviewer")
+  rfqs            Rfq[]
+  bookings        Booking[]
+  notifications   Notification[]
+  auditEvents     AuditEvent[]
+  saleListings    SaleListing[]
+  buyerEnquiries  BuyerEnquiry[]
+  emptyLegEnquiries EmptyLegEnquiry[]
+  documentsUploaded Document[]
+  quoteRevisions  QuoteRevision[]
+  verificationChecks VerificationCheck[]
+  conflictsResolved DataConflict[]
+  matchesReviewed MatchCandidate[]
+  importBatches   ImportBatch[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime @db.Timestamptz(3)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime? @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @db.Timestamptz(3)
+  scope                 String?
+  password              String? // hash only, managed by Better Auth
+  createdAt             DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @db.Timestamptz(3)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([identifier])
+}
+
+/// Staff roles. Permissions per role are defined in code (src/server/auth/permissions.ts).
+enum StaffRole {
+  SUPER_ADMIN
+  OPERATIONS // RFQs, quotes, bookings oversight
+  SUPPLY // operator claims, verification, agreements, aircraft review
+  SALES_DESK // aircraft-for-sale moderation and enquiries
+  DATA_STEWARD // imports, conflicts, provenance
+  SUPPORT // read-mostly customer support
+}
+
+model StaffRoleAssignment {
+  id          String    @id @default(cuid())
+  userId      String
+  role        StaffRole
+  grantedById String?
+  grantedAt   DateTime  @default(now()) @db.Timestamptz(3)
+  revokedAt   DateTime? @db.Timestamptz(3)
+  user        User      @relation("StaffRoleUser", fields: [userId], references: [id])
+  grantedBy   User?     @relation("StaffRoleGrantedBy", fields: [grantedById], references: [id])
+
+  @@index([userId, revokedAt])
+}
+
+model CustomerProfile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  companyName        String?
+  homeAirportId      String?
+  preferredCurrency  String   @default("INR") @db.Char(3)
+  preferredCategories String[] @default([])
+  marketingOptIn     Boolean  @default(false)
+  notes              String?
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt          DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime @updatedAt @db.Timestamptz(3)
+}
+
+// =====================================================================================
+// Operators
+// =====================================================================================
+
+enum OperatorLifecycle {
+  DISCOVERED // known from a public/regulatory source; nobody has claimed it
+  CLAIMED // a claim was approved: a verified member now represents the company
+  IN_REVIEW // verification documents submitted, under review
+  VERIFIED // verification passed; not yet commercially active
+  AGREEMENT_SIGNED // commercial agreement executed
+  ACTIVE // may receive RFQs and publish inventory
+  SUSPENDED
+  REJECTED
+  EXCLUDED // not a marketplace supplier (e.g. airport authority, cargo-only)
+}
+
+model Operator {
+  id                   String            @id @default(cuid())
+  slug                 String            @unique
+  legalName            String
+  displayName          String
+  countryCode          String            @db.Char(2)
+  lifecycle            OperatorLifecycle @default(DISCOVERED)
+  lifecycleChangedAt   DateTime          @default(now()) @db.Timestamptz(3)
+  isPubliclyListed     Boolean           @default(false) // directory visibility, admin-controlled
+  website              String?
+  linkedinUrl          String?
+  instagramHandle      String?
+  headquartersAddress  String?
+  baseDescription      String?
+  publicDescription    String? // written/approved for public display
+  /// Internal research classification (A–D etc.). Never displayed publicly as fact.
+  researchRelevance    String?
+  researchCharterActivity String?
+  researchOperatorKind String?
+  dataQualityFlags     String[]          @default([])
+  createdAt            DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime          @updatedAt @db.Timestamptz(3)
+  deletedAt            DateTime?         @db.Timestamptz(3)
+
+  country         Country                 @relation(fields: [countryCode], references: [code])
+  aliases         OperatorAlias[]
+  authorizations  OperatorAuthorization[]
+  contacts        OperatorContact[]
+  memberships     OperatorMembership[]
+  claims          OperatorClaim[]
+  verificationChecks VerificationCheck[]
+  agreements      Agreement[]
+  aircraft        Aircraft[]
+  fleetEvidence   FleetEvidence[]
+  pricingRules    PricingRule[]
+  rfqRecipients   RfqRecipient[]
+  quotes          Quote[]
+  bookings        Booking[]
+  emptyLegs       EmptyLegListing[]
+  documents       OperatorDocument[]
+  registryEntries AuthorityRegistryEntry[]
+
+  @@index([countryCode, lifecycle])
+  @@index([lifecycle, isPubliclyListed])
+  @@index([legalName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Operator_legalName_gin_idx")
+}
+
+model OperatorAlias {
+  id         String   @id @default(cuid())
+  operatorId String
+  alias      String
+  matchKey   String // normalised for matching
+  source     String? // DataSource code or "ADMIN"
+  operator   Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+
+  @@unique([operatorId, alias])
+  @@index([matchKey])
+}
+
+enum AviationAuthority {
+  DGCA // India
+  GCAA // United Arab Emirates
+  CAAS // Singapore
+  EASA_MEMBER
+  FAA
+  OTHER
+}
+
+enum AuthorizationNumberStatus {
+  VALID
+  MALFORMED
+  MISSING
+}
+
+model OperatorAuthorization {
+  id                String                    @id @default(cuid())
+  operatorId        String
+  authority         AviationAuthority
+  certificateType   String // NSOP, AOC, Part 135…
+  numberRaw         String?
+  numberNormalized  String?
+  numberStatus      AuthorizationNumberStatus
+  validFrom         DateTime?                 @db.Date
+  validUntil        DateTime?                 @db.Date
+  validUntilRaw     String?
+  scope             String? // DOMESTIC | INTERNATIONAL
+  verifiedAt        DateTime?                 @db.Timestamptz(3) // set by admin after checking the regulator
+  verifiedById      String?
+  source            String? // DataSource code or "ADMIN" / "OPERATOR"
+  createdAt         DateTime                  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime                  @updatedAt @db.Timestamptz(3)
+  operator          Operator                  @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+
+  @@unique([operatorId, authority, certificateType])
+  @@index([authority, numberNormalized])
+}
+
+enum ContactKind {
+  REGULATORY
+  COMPANY
+  DECISION_MAKER
+  CHARTER_SALES
+  OPERATIONS
+  BILLING
+}
+
+enum DataConfidence {
+  AUTHORITY
+  VERIFIED_PUBLIC
+  OPERATOR_PROVIDED
+  RESEARCH
+  UNVERIFIED
+}
+
+/// PRIVATE CRM data. Admin-only (permission operator.contacts.read). Never rendered publicly.
+model OperatorContact {
+  id             String         @id @default(cuid())
+  operatorId     String
+  externalKey    String?        @unique // importer key, e.g. "IN-NSOP-MASTER:17:decision-maker"
+  kind           ContactKind
+  name           String?
+  title          String?
+  emails         String[]       @default([])
+  phones         String[]       @default([]) // E.164
+  unparsedPhones String[]       @default([])
+  sourceUrl      String?
+  note           String?
+  confidence     DataConfidence
+  doNotContact   Boolean        @default(false)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime       @updatedAt @db.Timestamptz(3)
+  deletedAt      DateTime?      @db.Timestamptz(3)
+  operator       Operator       @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+
+  @@index([operatorId, kind])
+}
+
+enum MembershipRole {
+  OWNER
+  MANAGER
+  DISPATCHER
+  VIEWER
+}
+
+enum MembershipStatus {
+  PENDING // created by a claim; grants NOTHING until approved
+  ACTIVE
+  REVOKED
+}
+
+model OperatorMembership {
+  id          String           @id @default(cuid())
+  operatorId  String
+  userId      String
+  role        MembershipRole
+  status      MembershipStatus @default(PENDING)
+  approvedById String?
+  approvedAt  DateTime?        @db.Timestamptz(3)
+  createdAt   DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime         @updatedAt @db.Timestamptz(3)
+  operator    Operator         @relation(fields: [operatorId], references: [id])
+  user        User             @relation(fields: [userId], references: [id])
+
+  @@unique([operatorId, userId])
+  @@index([userId, status])
+}
+
+enum ClaimStatus {
+  SUBMITTED
+  NEEDS_INFO
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model OperatorClaim {
+  id              String      @id @default(cuid())
+  operatorId      String?     // null for "request a new operator profile"
+  userId          String
+  status          ClaimStatus @default(SUBMITTED)
+  proposedName    String? // for new-profile requests
+  proposedCountry String?     @db.Char(2)
+  claimantRole    String
+  workEmail       String
+  workPhone       String?
+  authorityNumber String?
+  message         String?
+  reviewerId      String?
+  decisionNote    String?
+  decidedAt       DateTime?   @db.Timestamptz(3)
+  createdAt       DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime    @updatedAt @db.Timestamptz(3)
+  operator        Operator?   @relation(fields: [operatorId], references: [id])
+  user            User        @relation("ClaimUser", fields: [userId], references: [id])
+  reviewer        User?       @relation("ClaimReviewer", fields: [reviewerId], references: [id])
+  documents       Document[]
+
+  @@index([status, createdAt])
+  @@index([operatorId])
+}
+
+enum VerificationCheckType {
+  AUTHORITY_CERTIFICATE
+  COMPANY_REGISTRATION
+  INSURANCE
+  TAX_REGISTRATION
+  BANK_DETAILS
+  SIGNATORY_IDENTITY
+  SAFETY_AUDIT
+}
+
+enum VerificationCheckStatus {
+  PENDING
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+model VerificationCheck {
+  id          String                  @id @default(cuid())
+  operatorId  String
+  type        VerificationCheckType
+  status      VerificationCheckStatus @default(PENDING)
+  documentId  String?
+  expiresAt   DateTime?               @db.Date
+  reviewerId  String?
+  reviewNote  String?
+  reviewedAt  DateTime?               @db.Timestamptz(3)
+  createdAt   DateTime                @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime                @updatedAt @db.Timestamptz(3)
+  operator    Operator                @relation(fields: [operatorId], references: [id])
+  document    Document?               @relation(fields: [documentId], references: [id])
+  reviewer    User?                   @relation(fields: [reviewerId], references: [id])
+
+  @@unique([operatorId, type])
+}
+
+enum AgreementStatus {
+  DRAFT
+  SENT
+  SIGNED
+  TERMINATED
+}
+
+/// CONFIDENTIAL commercial terms.
+model Agreement {
+  id              String          @id @default(cuid())
+  operatorId      String
+  version         Int
+  status          AgreementStatus @default(DRAFT)
+  /// CONFIDENTIAL: platform commission in basis points applied on top of operator price.
+  commissionBps   Int
+  minimumFee      Decimal?        @db.Decimal(14, 2)
+  currency        String          @db.Char(3)
+  effectiveFrom   DateTime?       @db.Date
+  effectiveUntil  DateTime?       @db.Date
+  signedAt        DateTime?       @db.Timestamptz(3)
+  /// Click-through acceptance by an operator OWNER (until an e-signature provider is configured).
+  acceptedById    String?
+  acceptedName    String?
+  acceptedIp      String?
+  documentId      String?
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+  operator        Operator        @relation(fields: [operatorId], references: [id])
+  document        Document?       @relation(fields: [documentId], references: [id])
+
+  @@unique([operatorId, version])
+}
+
+// =====================================================================================
+// Documents & storage
+// =====================================================================================
+
+enum DocumentKind {
+  AUTHORITY_CERTIFICATE
+  INSURANCE
+  COMPANY_REGISTRATION
+  AGREEMENT
+  AIRCRAFT_REGISTRATION
+  AIRWORTHINESS
+  AIRCRAFT_PHOTO
+  SALE_LISTING_PHOTO
+  SALE_LISTING_DOCUMENT
+  OTHER
+}
+
+/// Private object. Served only through authorised, signed routes.
+model Document {
+  id           String       @id @default(cuid())
+  kind         DocumentKind
+  storageKey   String       @unique
+  fileName     String
+  mimeType     String // sniffed server-side, not trusted from the client
+  byteSize     Int
+  sha256       String       @db.Char(64)
+  uploadedById String?
+  createdAt    DateTime     @default(now()) @db.Timestamptz(3)
+  deletedAt    DateTime?    @db.Timestamptz(3)
+  uploadedBy   User?        @relation(fields: [uploadedById], references: [id])
+  claim        OperatorClaim[]
+  checks       VerificationCheck[]
+  agreements   Agreement[]
+  operatorDocs OperatorDocument[]
+  aircraftImages AircraftImage[]
+  saleMedia    SaleListingMedia[]
+
+  @@index([sha256])
+}
+
+model OperatorDocument {
+  id         String   @id @default(cuid())
+  operatorId String
+  documentId String
+  label      String?
+  operator   Operator @relation(fields: [operatorId], references: [id])
+  document   Document @relation(fields: [documentId], references: [id])
+
+  @@unique([operatorId, documentId])
+}
+
+// =====================================================================================
+// Aircraft
+// =====================================================================================
+
+enum AirframeClass {
+  FIXED_WING
+  ROTARY_WING
+  BALLOON
+}
+
+enum AircraftCategory {
+  PISTON
+  TURBOPROP
+  LIGHT_JET
+  MIDSIZE_JET
+  SUPER_MIDSIZE_JET
+  HEAVY_JET
+  ULTRA_LONG_RANGE_JET
+  VIP_AIRLINER
+  AIRLINER
+  HELICOPTER_SINGLE
+  HELICOPTER_TWIN
+  BALLOON
+  GLIDER
+}
+
+/// Reference type data. Performance specs are nullable and must carry a source when set.
+model AircraftType {
+  id              String           @id @default(cuid())
+  key             String           @unique
+  manufacturer    String
+  model           String
+  family          String
+  category        AircraftCategory
+  airframeClass   AirframeClass
+  typicalSeats    Int?
+  rangeNm         Int?
+  cruiseKtas      Int?
+  baggageCuFt     Decimal?         @db.Decimal(6, 1)
+  cabinHeightIn   Decimal?         @db.Decimal(5, 1)
+  specsSource     String? // citation for any spec value above
+  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+  aircraft        Aircraft[]
+  fleetEvidence   FleetEvidence[]
+
+  @@index([category])
+}
+
+enum EvidenceLevel {
+  AUTHORITY_REGISTRY
+  OPERATOR_PUBLISHED_CURRENT
+  FLIGHT_TRACKING_RECENT
+  PUBLIC_RECORD_UNCONFIRMED
+  MANAGED_NOT_CHARTER
+  NEEDS_OPERATOR_CONFIRMATION
+  PUBLIC_MODEL_RECORD
+  OPERATOR_CONFIRMED // confirmed by the operator through the portal
+  PLATFORM_VERIFIED // checked by ThePrivate staff against documents
+}
+
+enum AircraftReviewStatus {
+  IMPORTED_UNREVIEWED
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum AircraftOperationalStatus {
+  UNKNOWN
+  ACTIVE
+  MAINTENANCE
+  INACTIVE
+  RETIRED
+}
+
+enum TypeResolution {
+  MATCHED
+  AMBIGUOUS
+  UNMATCHED
+  CONFLICT
+  ADMIN_SET
+}
+
+model Aircraft {
+  id                  String                    @id @default(cuid())
+  registration        String                    @unique
+  operatorId          String
+  aircraftTypeId      String?
+  modelRaw            String?
+  typeResolution      TypeResolution
+  typeFamilyHint      String?
+  airframeClass       AirframeClass?
+  serialNumber        String?
+  yearOfManufacture   Int?
+  seats               Int?
+  seatsRaw            String?
+  isCargo             Boolean                   @default(false)
+  isAerialWork        Boolean                   @default(false)
+  homeBaseAirportId   String?
+  evidenceLevel       EvidenceLevel
+  sourceStatusRaw     String?
+  usageRaw            String?
+  sourceUrl           String?
+  sourceNote          String?
+  attributionUncertain Boolean                  @default(false)
+  dataQualityFlags    String[]                  @default([])
+  reviewStatus        AircraftReviewStatus      @default(DRAFT)
+  operationalStatus   AircraftOperationalStatus @default(UNKNOWN)
+  /// Set only by an admin after review. Imports never set this.
+  charterEligible     Boolean                   @default(false)
+  publicDescription   String?
+  createdAt           DateTime                  @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime                  @updatedAt @db.Timestamptz(3)
+  deletedAt           DateTime?                 @db.Timestamptz(3)
+
+  operator      Operator               @relation(fields: [operatorId], references: [id])
+  aircraftType  AircraftType?          @relation(fields: [aircraftTypeId], references: [id])
+  homeBase      Airport?               @relation(fields: [homeBaseAirportId], references: [id])
+  images        AircraftImage[]
+  availability  AircraftAvailability[]
+  pricingRules  PricingRule[]
+  quotes        Quote[]
+  bookings      Booking[]
+  emptyLegs     EmptyLegListing[]
+
+  @@index([operatorId, reviewStatus])
+  @@index([charterEligible, reviewStatus, operationalStatus])
+  @@index([aircraftTypeId])
+}
+
+/// Model-level evidence ("operator X flies AW139s"). NEVER bookable inventory.
+model FleetEvidence {
+  id              String         @id @default(cuid())
+  externalKey     String         @unique
+  operatorId      String
+  aircraftTypeId  String?
+  modelRaw        String
+  typeResolution  TypeResolution
+  seats           Int?
+  reportedCount   Int?
+  usageRaw        String?
+  evidenceLevel   EvidenceLevel
+  sourceStatusRaw String?
+  sourceUrl       String?
+  sourceType      String?
+  note            String?
+  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime       @updatedAt @db.Timestamptz(3)
+  operator        Operator       @relation(fields: [operatorId], references: [id])
+  aircraftType    AircraftType?  @relation(fields: [aircraftTypeId], references: [id])
+
+  @@index([operatorId])
+}
+
+model AircraftImage {
+  id         String   @id @default(cuid())
+  aircraftId String
+  documentId String
+  alt        String
+  sortOrder  Int      @default(0)
+  isApproved Boolean  @default(false)
+  aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  document   Document @relation(fields: [documentId], references: [id])
+
+  @@index([aircraftId, sortOrder])
+}
+
+enum AvailabilityKind {
+  AVAILABLE
+  BLOCKED
+  MAINTENANCE
+}
+
+/// Operator-declared windows. Only AVAILABLE windows in the future with a recent confirmation
+/// count as availability; stale windows are shown as unconfirmed, never as available.
+model AircraftAvailability {
+  id            String           @id @default(cuid())
+  aircraftId    String
+  kind          AvailabilityKind
+  startsAt      DateTime         @db.Timestamptz(3)
+  endsAt        DateTime         @db.Timestamptz(3)
+  baseAirportId String?
+  note          String?
+  confirmedAt   DateTime         @default(now()) @db.Timestamptz(3)
+  createdById   String?
+  createdAt     DateTime         @default(now()) @db.Timestamptz(3)
+  aircraft      Aircraft         @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  baseAirport   Airport?         @relation(fields: [baseAirportId], references: [id])
+
+  @@index([aircraftId, startsAt, endsAt])
+  @@index([kind, startsAt])
+}
+
+/// CONFIDENTIAL operator base rates. Readable only by the owning operator and permitted staff.
+model PricingRule {
+  id                 String    @id @default(cuid())
+  operatorId         String
+  aircraftId         String?
+  currency           String    @db.Char(3)
+  /// CONFIDENTIAL
+  hourlyRate         Decimal   @db.Decimal(14, 2)
+  minimumBillableHours Decimal @db.Decimal(4, 2) @default(1)
+  /// CONFIDENTIAL
+  positioningHourlyRate Decimal? @db.Decimal(14, 2)
+  overnightFee       Decimal?  @db.Decimal(14, 2)
+  validFrom          DateTime  @db.Date
+  validUntil         DateTime? @db.Date
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+  operator           Operator  @relation(fields: [operatorId], references: [id])
+  aircraft           Aircraft? @relation(fields: [aircraftId], references: [id])
+
+  @@index([operatorId, isActive])
+  @@index([aircraftId, isActive])
+}
+
+// =====================================================================================
+// Charter: RFQ → Quote → Booking
+// =====================================================================================
+
+enum TripType {
+  ONE_WAY
+  RETURN
+  MULTI_LEG
+}
+
+enum RfqStatus {
+  SUBMITTED
+  MATCHING
+  AWAITING_QUOTES
+  QUOTES_AVAILABLE
+  ACCEPTED
+  BOOKED
+  EXPIRED
+  CANCELLED
+}
+
+model Rfq {
+  id                 String          @id @default(cuid())
+  reference          String          @unique // human-friendly, e.g. TP-7KX3Q2
+  customerId         String
+  tripType           TripType
+  passengers         Int
+  categoryPreference AircraftCategory?
+  requirements       String?
+  petsOnBoard        Boolean         @default(false)
+  status             RfqStatus       @default(SUBMITTED)
+  contactName        String
+  contactPhone       String?
+  submittedAt        DateTime        @default(now()) @db.Timestamptz(3)
+  expiresAt          DateTime        @db.Timestamptz(3)
+  cancelledAt        DateTime?       @db.Timestamptz(3)
+  cancelReason       String?
+  version            Int             @default(0) // optimistic concurrency
+  createdAt          DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime        @updatedAt @db.Timestamptz(3)
+  customer           User            @relation(fields: [customerId], references: [id])
+  legs               RfqLeg[]
+  recipients         RfqRecipient[]
+  quotes             Quote[]
+  booking            Booking?
+
+  @@index([customerId, status])
+  @@index([status, submittedAt])
+}
+
+model RfqLeg {
+  id              String    @id @default(cuid())
+  rfqId           String
+  sequence        Int
+  fromAirportId   String
+  toAirportId     String
+  departureDate   DateTime  @db.Date // local date at departure airport
+  departureTimeLocal String? // "HH:MM" wall-clock at departure airport; null = flexible
+  departureAtUtc  DateTime? @db.Timestamptz(3)
+  flexibilityHours Int      @default(0)
+  passengers      Int
+  rfq             Rfq       @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  fromAirport     Airport   @relation("RfqLegFrom", fields: [fromAirportId], references: [id])
+  toAirport       Airport   @relation("RfqLegTo", fields: [toAirportId], references: [id])
+
+  @@unique([rfqId, sequence])
+}
+
+enum RecipientStatus {
+  SENT
+  VIEWED
+  DECLINED
+  QUOTED
+  EXPIRED
+}
+
+model RfqRecipient {
+  id            String          @id @default(cuid())
+  rfqId         String
+  operatorId    String
+  status        RecipientStatus @default(SENT)
+  matchReason   String
+  declineReason String?
+  sentAt        DateTime        @default(now()) @db.Timestamptz(3)
+  viewedAt      DateTime?       @db.Timestamptz(3)
+  rfq           Rfq             @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  operator      Operator        @relation(fields: [operatorId], references: [id])
+
+  @@unique([rfqId, operatorId])
+  @@index([operatorId, status])
+}
+
+enum QuoteStatus {
+  SUBMITTED
+  REVISED
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+  EXPIRED
+  SUPERSEDED
+}
+
+model Quote {
+  id                String        @id @default(cuid())
+  rfqId             String
+  operatorId        String
+  aircraftId        String
+  status            QuoteStatus   @default(SUBMITTED)
+  currentRevision   Int           @default(1)
+  validUntil        DateTime      @db.Timestamptz(3)
+  version           Int           @default(0)
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
+  rfq               Rfq           @relation(fields: [rfqId], references: [id])
+  operator          Operator      @relation(fields: [operatorId], references: [id])
+  aircraft          Aircraft      @relation(fields: [aircraftId], references: [id])
+  revisions         QuoteRevision[]
+  booking           Booking?
+
+  @@unique([rfqId, operatorId, aircraftId])
+  @@index([rfqId, status])
+  @@index([operatorId, status])
+}
+
+model QuoteRevision {
+  id               String   @id @default(cuid())
+  quoteId          String
+  revision         Int
+  currency         String   @db.Char(3)
+  /// CONFIDENTIAL: what the operator is paid.
+  operatorPrice    Decimal  @db.Decimal(14, 2)
+  /// CONFIDENTIAL: platform fee = customerPrice - operatorPrice - taxes.
+  platformFee      Decimal  @db.Decimal(14, 2)
+  taxes            Decimal  @db.Decimal(14, 2)
+  /// Customer-facing total, computed server-side from operatorPrice + agreement + tax rules.
+  customerPrice    Decimal  @db.Decimal(14, 2)
+  inclusions       String[] @default([])
+  exclusions       String[] @default([])
+  terms            String?
+  validUntil       DateTime @db.Timestamptz(3)
+  createdById      String
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
+  quote            Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  createdBy        User     @relation(fields: [createdById], references: [id])
+  bookings         Booking[]
+
+  @@unique([quoteId, revision])
+}
+
+enum BookingStatus {
+  PENDING_OPERATOR_CONFIRMATION
+  CONFIRMED
+  PAYMENT_PENDING
+  PAID // set ONLY by a verified payment webhook or audited offline-settlement record
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Booking {
+  id               String        @id @default(cuid())
+  reference        String        @unique
+  rfqId            String        @unique // one booking per RFQ: prevents double acceptance
+  quoteId          String        @unique
+  quoteRevisionId  String
+  customerId       String
+  operatorId       String
+  aircraftId       String
+  status           BookingStatus @default(PENDING_OPERATOR_CONFIRMATION)
+  currency         String        @db.Char(3)
+  customerTotal    Decimal       @db.Decimal(14, 2)
+  version          Int           @default(0)
+  cancelledAt      DateTime?     @db.Timestamptz(3)
+  cancelReason     String?
+  createdAt        DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime      @updatedAt @db.Timestamptz(3)
+  rfq              Rfq           @relation(fields: [rfqId], references: [id])
+  quote            Quote         @relation(fields: [quoteId], references: [id])
+  quoteRevision    QuoteRevision @relation(fields: [quoteRevisionId], references: [id])
+  customer         User          @relation(fields: [customerId], references: [id])
+  operator         Operator      @relation(fields: [operatorId], references: [id])
+  aircraft         Aircraft      @relation(fields: [aircraftId], references: [id])
+  legs             BookingLeg[]
+  events           BookingEvent[]
+  payments         Payment[]
+
+  @@index([customerId, status])
+  @@index([operatorId, status])
+}
+
+model BookingLeg {
+  id             String    @id @default(cuid())
+  bookingId      String
+  sequence       Int
+  fromAirportId  String
+  toAirportId    String
+  departureDate  DateTime  @db.Date
+  departureTimeLocal String?
+  departureAtUtc DateTime? @db.Timestamptz(3)
+  passengers     Int
+  booking        Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fromAirport    Airport   @relation("BookingLegFrom", fields: [fromAirportId], references: [id])
+  toAirport      Airport   @relation("BookingLegTo", fields: [toAirportId], references: [id])
+
+  @@unique([bookingId, sequence])
+}
+
+/// Append-only status history.
+model BookingEvent {
+  id          String         @id @default(cuid())
+  bookingId   String
+  fromStatus  BookingStatus?
+  toStatus    BookingStatus
+  actorUserId String?
+  actorType   ActorType
+  note        String?
+  createdAt   DateTime       @default(now()) @db.Timestamptz(3)
+  booking     Booking        @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId, createdAt])
+}
+
+enum PaymentStatus {
+  CREATED
+  AUTHORIZED
+  SETTLED // only from a verified provider webhook / audited offline settlement
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  bookingId       String
+  provider        String // "razorpay" | "stripe" | "offline"
+  providerRef     String?
+  status          PaymentStatus @default(CREATED)
+  amount          Decimal       @db.Decimal(14, 2)
+  currency        String        @db.Char(3)
+  evidenceNote    String? // required for offline settlement
+  settledAt       DateTime?     @db.Timestamptz(3)
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(3)
+  booking         Booking       @relation(fields: [bookingId], references: [id])
+
+  @@unique([provider, providerRef])
+  @@index([bookingId])
+}
+
+// =====================================================================================
+// Empty legs
+// =====================================================================================
+
+enum EmptyLegStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  WITHDRAWN
+  EXPIRED
+  SOLD
+}
+
+model EmptyLegListing {
+  id                 String         @id @default(cuid())
+  operatorId         String
+  aircraftId         String
+  fromAirportId      String
+  toAirportId        String
+  windowStartUtc     DateTime       @db.Timestamptz(3)
+  windowEndUtc       DateTime       @db.Timestamptz(3)
+  seatsAvailable     Int
+  currency           String         @db.Char(3)
+  /// Customer price (already including platform fee). Null = price on request.
+  customerPrice      Decimal?       @db.Decimal(14, 2)
+  /// CONFIDENTIAL operator price for the leg.
+  operatorPrice      Decimal?       @db.Decimal(14, 2)
+  status             EmptyLegStatus @default(DRAFT)
+  publishedAt        DateTime?      @db.Timestamptz(3)
+  validUntil         DateTime       @db.Timestamptz(3)
+  notes              String?
+  createdAt          DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime       @updatedAt @db.Timestamptz(3)
+  operator           Operator       @relation(fields: [operatorId], references: [id])
+  aircraft           Aircraft       @relation(fields: [aircraftId], references: [id])
+  fromAirport        Airport        @relation("EmptyLegFrom", fields: [fromAirportId], references: [id])
+  toAirport          Airport        @relation("EmptyLegTo", fields: [toAirportId], references: [id])
+  enquiries          EmptyLegEnquiry[]
+
+  @@index([status, windowStartUtc])
+  @@index([fromAirportId, toAirportId, status])
+}
+
+enum EnquiryStatus {
+  NEW
+  FORWARDED
+  RESPONDED
+  CONVERTED
+  CLOSED
+}
+
+model EmptyLegEnquiry {
+  id          String          @id @default(cuid())
+  listingId   String
+  userId      String
+  passengers  Int
+  message     String?
+  status      EnquiryStatus   @default(NEW)
+  createdAt   DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime        @updatedAt @db.Timestamptz(3)
+  listing     EmptyLegListing @relation(fields: [listingId], references: [id])
+  user        User            @relation(fields: [userId], references: [id])
+
+  @@index([listingId, status])
+}
+
+// =====================================================================================
+// Aircraft sales marketplace
+// =====================================================================================
+
+enum SaleListingStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  NEEDS_INFO
+  APPROVED
+  PUBLISHED
+  REJECTED
+  SOLD
+  WITHDRAWN
+}
+
+enum SellerType {
+  OWNER
+  OPERATOR
+  BROKER
+}
+
+model SaleListing {
+  id                String            @id @default(cuid())
+  slug              String            @unique
+  sellerUserId      String
+  sellerType        SellerType
+  status            SaleListingStatus @default(DRAFT)
+  category          AircraftCategory
+  manufacturer      String
+  model             String
+  yearOfManufacture Int
+  registration      String?
+  serialNumber      String?
+  totalTimeHours    Int?
+  landings          Int?
+  locationText      String
+  locationCountry   String?           @db.Char(2)
+  currency          String            @db.Char(3)
+  askingPrice       Decimal?          @db.Decimal(14, 2) // null = price on request
+  priceOnRequest    Boolean           @default(false)
+  headline          String
+  description       String
+  /// PRIVATE: never shown publicly; enquiries are routed by staff.
+  contactName       String
+  contactEmail      String
+  contactPhone      String?
+  publishedAt       DateTime?         @db.Timestamptz(3)
+  createdAt         DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime          @updatedAt @db.Timestamptz(3)
+  deletedAt         DateTime?         @db.Timestamptz(3)
+  seller            User              @relation(fields: [sellerUserId], references: [id])
+  media             SaleListingMedia[]
+  enquiries         BuyerEnquiry[]
+  reviewEvents      ListingReviewEvent[]
+  lead              SellerLead?
+
+  @@index([status, publishedAt])
+  @@index([category, status])
+}
+
+model SaleListingMedia {
+  id         String      @id @default(cuid())
+  listingId  String
+  documentId String
+  isPublic   Boolean     @default(false) // photos may be public once approved; documents never
+  sortOrder  Int         @default(0)
+  caption    String?
+  listing    SaleListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  document   Document    @relation(fields: [documentId], references: [id])
+
+  @@index([listingId, sortOrder])
+}
+
+enum LeadStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  LISTED
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+model SellerLead {
+  id          String       @id @default(cuid())
+  listingId   String?      @unique
+  name        String
+  email       String
+  phone       String?
+  stage       LeadStage    @default(NEW)
+  ownerStaffId String?
+  notes       String?
+  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(3)
+  listing     SaleListing? @relation(fields: [listingId], references: [id])
+}
+
+enum BuyerEnquiryType {
+  GENERAL
+  REQUEST_INFO
+  PURCHASE_INTEREST
+  VIEWING
+}
+
+model BuyerEnquiry {
+  id         String           @id @default(cuid())
+  listingId  String
+  userId     String?
+  type       BuyerEnquiryType
+  name       String
+  email      String
+  phone      String?
+  message    String
+  status     EnquiryStatus    @default(NEW)
+  createdAt  DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime         @updatedAt @db.Timestamptz(3)
+  listing    SaleListing      @relation(fields: [listingId], references: [id])
+  user       User?            @relation(fields: [userId], references: [id])
+
+  @@index([listingId, status])
+}
+
+model ListingReviewEvent {
+  id          String            @id @default(cuid())
+  listingId   String
+  fromStatus  SaleListingStatus?
+  toStatus    SaleListingStatus
+  actorUserId String?
+  note        String?
+  createdAt   DateTime          @default(now()) @db.Timestamptz(3)
+  listing     SaleListing       @relation(fields: [listingId], references: [id])
+
+  @@index([listingId, createdAt])
+}
+
+// =====================================================================================
+// Notifications & jobs
+// =====================================================================================
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String // e.g. rfq.quote_received
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime? @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  user      User      @relation(fields: [userId], references: [id])
+  deliveries NotificationDelivery[]
+
+  @@index([userId, readAt, createdAt])
+}
+
+enum DeliveryChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+enum DeliveryStatus {
+  QUEUED
+  SENT
+  FAILED
+  SKIPPED_NOT_CONFIGURED // provider credentials absent: never pretend it was sent
+}
+
+model NotificationDelivery {
+  id             String          @id @default(cuid())
+  notificationId String
+  channel        DeliveryChannel
+  status         DeliveryStatus  @default(QUEUED)
+  providerRef    String?
+  error          String?
+  attempts       Int             @default(0)
+  createdAt      DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime        @updatedAt @db.Timestamptz(3)
+  notification   Notification    @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  DEAD
+}
+
+/// Transactional outbox / work queue, consumed with SELECT … FOR UPDATE SKIP LOCKED.
+model Job {
+  id         String    @id @default(cuid())
+  type       String
+  payload    Json
+  status     JobStatus @default(PENDING)
+  runAt      DateTime  @default(now()) @db.Timestamptz(3)
+  attempts   Int       @default(0)
+  maxAttempts Int      @default(5)
+  lockedAt   DateTime? @db.Timestamptz(3)
+  lastError  String?
+  dedupeKey  String?   @unique
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([status, runAt])
+}
+
+// =====================================================================================
+// Data provenance & imports
+// =====================================================================================
+
+model DataSource {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  fileName    String
+  kind        String // XLSX | PDF | API | MANUAL
+  role        String
+  country     String?  @db.Char(2)
+  description String
+  asOf        DateTime? @db.Date
+  latestSha256 String  @db.Char(64)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  records     SourceRecord[]
+}
+
+enum ImportMode {
+  DRY_RUN
+  APPLY
+}
+
+enum ImportBatchStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+  ROLLED_BACK
+}
+
+model ImportBatch {
+  id           String            @id @default(cuid())
+  mode         ImportMode
+  status       ImportBatchStatus @default(RUNNING)
+  planHash     String            @db.Char(64)
+  sourceHashes Json
+  summary      Json?
+  error        String?
+  initiatedBy  String // "cli:<name>" or a user id
+  userId       String?
+  startedAt    DateTime          @default(now()) @db.Timestamptz(3)
+  finishedAt   DateTime?         @db.Timestamptz(3)
+  user         User?             @relation(fields: [userId], references: [id])
+  records      SourceRecord[]
+  observations FieldObservation[]
+  changes      ImportChange[]
+}
+
+/// One row per source row; (source, sheet, row) is the natural key; contentHash detects changes.
+model SourceRecord {
+  id             String      @id @default(cuid())
+  dataSourceId   String
+  sheet          String
+  rowNumber      Int
+  contentHash    String      @db.Char(32)
+  raw            Json
+  firstBatchId   String
+  lastSeenBatchId String
+  createdAt      DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime    @updatedAt @db.Timestamptz(3)
+  dataSource     DataSource  @relation(fields: [dataSourceId], references: [id])
+  firstBatch     ImportBatch @relation(fields: [firstBatchId], references: [id])
+
+  @@unique([dataSourceId, sheet, rowNumber])
+}
+
+/// Natural keys for imported entities: makes re-imports idempotent.
+model ExternalIdentifier {
+  id         String   @id @default(cuid())
+  namespace  String // "IN-NSOP-MASTER", "UAE-TP", "REG", "GCAA"
+  value      String
+  entityType String
+  entityId   String
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([namespace, value])
+  @@index([entityType, entityId])
+}
+
+/// What a given source said about one field of one entity.
+model FieldObservation {
+  id          String         @id @default(cuid())
+  entityType  String
+  entityId    String
+  field       String
+  value       Json
+  sourceCode  String
+  sheet       String
+  rowNumber   Int
+  fieldGroup  String
+  confidence  DataConfidence
+  batchId     String
+  createdAt   DateTime       @default(now()) @db.Timestamptz(3)
+  batch       ImportBatch    @relation(fields: [batchId], references: [id])
+
+  @@unique([entityType, entityId, field, sourceCode, sheet, rowNumber])
+  @@index([entityType, entityId])
+}
+
+/// Per-entity change log of an import batch (supports rollback of untouched creations).
+model ImportChange {
+  id         String      @id @default(cuid())
+  batchId    String
+  entityType String
+  entityId   String
+  action     String // CREATE | UPDATE
+  before     Json?
+  after      Json?
+  createdAt  DateTime    @default(now()) @db.Timestamptz(3)
+  batch      ImportBatch @relation(fields: [batchId], references: [id])
+
+  @@index([batchId])
+  @@index([entityType, entityId])
+}
+
+enum ConflictStatus {
+  OPEN
+  AUTO_RESOLVED
+  RESOLVED
+  DISMISSED
+}
+
+model DataConflict {
+  id           String         @id @default(cuid())
+  conflictKey  String         @unique // entityKey|field – stable across re-imports
+  entityType   String
+  entityKey    String
+  entityId     String?
+  field        String
+  values       Json // [{value, source, sheet, row, trust}]
+  status       ConflictStatus
+  chosenValue  Json?
+  reason       String
+  resolvedById String?
+  resolvedAt   DateTime?      @db.Timestamptz(3)
+  resolutionNote String?
+  createdAt    DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime       @updatedAt @db.Timestamptz(3)
+  resolvedBy   User?          @relation(fields: [resolvedById], references: [id])
+
+  @@index([status, entityType])
+}
+
+enum MatchStatus {
+  PENDING
+  CONFIRMED_SAME // admin merged the records
+  CONFIRMED_DISTINCT
+}
+
+model MatchCandidate {
+  id             String      @id @default(cuid())
+  entityType     String
+  leftKey        String
+  rightKey       String
+  score          Decimal     @db.Decimal(4, 2)
+  reasons        String[]
+  recommendation String
+  status         MatchStatus @default(PENDING)
+  reviewedById   String?
+  reviewedAt     DateTime?   @db.Timestamptz(3)
+  note           String?
+  createdAt      DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime    @updatedAt @db.Timestamptz(3)
+  reviewedBy     User?       @relation(fields: [reviewedById], references: [id])
+
+  @@unique([entityType, leftKey, rightKey])
+  @@index([status])
+}
+
+/// Regulator list rows (e.g. GCAA approved operators). Not operators by themselves.
+model AuthorityRegistryEntry {
+  id                String            @id @default(cuid())
+  externalKey       String            @unique // "GCAA:AT-0001"
+  authority         AviationAuthority
+  organizationName  String
+  approvalNumberRaw String
+  approvalNumber    String?
+  organizationType  String?
+  issueDate         DateTime?         @db.Date
+  expiryDate        DateTime?         @db.Date
+  country           String?
+  operatorId        String?
+  sourceCode        String
+  createdAt         DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime          @updatedAt @db.Timestamptz(3)
+  operator          Operator?         @relation(fields: [operatorId], references: [id])
+
+  @@index([authority, approvalNumber])
+}
+
+model EvidenceSource {
+  id           String   @id @default(cuid())
+  externalKey  String   @unique
+  label        String
+  organization String?
+  sourceType   String?
+  asOf         String?
+  url          String?
+  usage        String?
+  sourceCode   String
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+}
+
+// =====================================================================================
+// Audit & settings
+// =====================================================================================
+
+enum ActorType {
+  USER
+  SYSTEM
+  IMPORT
+  WEBHOOK
+}
+
+/// Append-only. Never updated or deleted by application code.
+model AuditEvent {
+  id          String    @id @default(cuid())
+  actorType   ActorType
+  actorUserId String?
+  action      String // e.g. operator.lifecycle.change
+  entityType  String
+  entityId    String
+  before      Json?
+  after       Json?
+  ipAddress   String?
+  userAgent   String?
+  requestId   String?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  actor       User?     @relation(fields: [actorUserId], references: [id])
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+}
+
+model SystemSetting {
+  key         String   @id
+  value       Json
+  updatedById String?
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+}
+
+enum ContactTopic {
+  CHARTER
+  OPERATOR
+  SALES
+  SUPPORT
+  PRESS
+  OTHER
+}
+
+/// Messages from the public contact form, handled by staff.
+model ContactMessage {
+  id        String        @id @default(cuid())
+  topic     ContactTopic
+  name      String
+  email     String
+  phone     String?
+  message   String
+  userId    String?
+  handledAt DateTime?     @db.Timestamptz(3)
+  handledById String?
+  createdAt DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@index([handledAt, createdAt])
+  @@index([email, createdAt])
+}

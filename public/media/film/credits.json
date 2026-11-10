@@ -1,0 +1,89 @@
+[
+  {
+    "id": "cabin",
+    "page": "https://commons.wikimedia.org/wiki/File:Embraer_Lineage_1000_interior_seat.jpg",
+    "title": "Embraer Lineage 1000 interior seat",
+    "author": "JetRequest.com",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "changes": "Cropped, resized, window panes keyed to transparency and composited with a sky plate.",
+    "files": [
+      {
+        "src": "/media/film/cabin-3200.webp",
+        "width": 3200,
+        "height": 2131,
+        "bytes": 421440
+      },
+      {
+        "src": "/media/film/cabin-1920.webp",
+        "width": 1920,
+        "height": 1279,
+        "bytes": 155316
+      },
+      {
+        "src": "/media/film/cabin-1280.webp",
+        "width": 1280,
+        "height": 852,
+        "bytes": 81396
+      }
+    ]
+  },
+  {
+    "id": "sky-horizon",
+    "page": "https://commons.wikimedia.org/wiki/File:Summer_above_the_clouds_(Unsplash).jpg",
+    "title": "Summer above the clouds",
+    "author": "Liane Metzler",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Resized.",
+    "files": [
+      {
+        "src": "/media/film/sky-horizon-3200.webp",
+        "width": 3200,
+        "height": 2133,
+        "bytes": 933456
+      },
+      {
+        "src": "/media/film/sky-horizon-1920.webp",
+        "width": 1920,
+        "height": 1280,
+        "bytes": 189058
+      },
+      {
+        "src": "/media/film/sky-horizon-1280.webp",
+        "width": 1280,
+        "height": 853,
+        "bytes": 46306
+      }
+    ]
+  },
+  {
+    "id": "sky-descent",
+    "page": "https://commons.wikimedia.org/wiki/File:Aerial_cloud_sunset._(Unsplash).jpg",
+    "title": "Aerial cloud sunset",
+    "author": "Christian Seeling",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Resized.",
+    "files": [
+      {
+        "src": "/media/film/sky-descent-2560.webp",
+        "width": 2560,
+        "height": 1707,
+        "bytes": 180084
+      },
+      {
+        "src": "/media/film/sky-descent-1600.webp",
+        "width": 1600,
+        "height": 1067,
+        "bytes": 93256
+      },
+      {
+        "src": "/media/film/sky-descent-1024.webp",
+        "width": 1024,
+        "height": 683,
+        "bytes": 51128
+      }
+    ]
+  }
+]

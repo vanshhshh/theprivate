@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+.env
+.env.*.local
+.env.local
+*.tsbuildinfo
+next-env.d.ts
+/.data/
+/storage/
+/reports/import/*.json
+/src/generated/
+.neon
+
+# Business data: operator contacts, CRM and import reports. Never commit (the repository is public).
+/ThePrivate_Aviation_Database_Bundle/
+/reports/

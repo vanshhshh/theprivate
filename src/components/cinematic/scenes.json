@@ -1,0 +1,110 @@
+{
+  "ramp-dusk": {
+    "src": "/media/scenes/ramp-dusk-1600.webp",
+    "srcSet": "/media/scenes/ramp-dusk-2560.webp 2560w, /media/scenes/ramp-dusk-1600.webp 1600w, /media/scenes/ramp-dusk-960.webp 960w",
+    "aspect": 1.6665,
+    "focal": {
+      "x": 0.5,
+      "y": 0.45
+    },
+    "alt": "A business jet silhouetted on the ramp against a low golden sun.",
+    "credit": {
+      "work": "G550",
+      "author": "John Murphy",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:G550_(2632546219).jpg",
+      "changes": "Cropped, resized and colour graded to match the homepage film. Our adaptation is released under the same licence."
+    }
+  },
+  "wing-dusk": {
+    "src": "/media/scenes/wing-dusk-1600.webp",
+    "srcSet": "/media/scenes/wing-dusk-2560.webp 2560w, /media/scenes/wing-dusk-1600.webp 1600w, /media/scenes/wing-dusk-960.webp 960w",
+    "aspect": 1.7541,
+    "focal": {
+      "x": 0.6,
+      "y": 0.5
+    },
+    "alt": "An aircraft wing above a sea of clouds at sunset.",
+    "credit": {
+      "work": "Aircraft cabin window views of sunset, a flight towards Kolkata from Hyderabad",
+      "author": "Pinakpani",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Aircraft_cabin_window_views_of_sunset,_a_flight_towards_Kolkata_from_Hyderabad_04.jpg",
+      "changes": "Cropped, resized and colour graded to match the homepage film. Our adaptation is released under the same licence."
+    }
+  },
+  "cabin-aisle": {
+    "src": "/media/scenes/cabin-aisle-1600.webp",
+    "srcSet": "/media/scenes/cabin-aisle-2560.webp 2560w, /media/scenes/cabin-aisle-1600.webp 1600w, /media/scenes/cabin-aisle-960.webp 960w",
+    "aspect": 1.5627,
+    "focal": {
+      "x": 0.5,
+      "y": 0.55
+    },
+    "alt": "The aisle of a business jet cabin: cream leather club seats and oval windows.",
+    "credit": {
+      "work": "Gulfstream G550, EBACE 2018, Le Grand-Saconnex (BL7C0727)",
+      "author": "Matti Blume",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Gulfstream_G550,_EBACE_2018,_Le_Grand-Saconnex_(BL7C0727).jpg",
+      "changes": "Cropped, resized and colour graded to match the homepage film. Our adaptation is released under the same licence."
+    }
+  },
+  "cabin-warm": {
+    "src": "/media/scenes/cabin-warm-1600.webp",
+    "srcSet": "/media/scenes/cabin-warm-2560.webp 2560w, /media/scenes/cabin-warm-1600.webp 1600w, /media/scenes/cabin-warm-960.webp 960w",
+    "aspect": 1.4999,
+    "focal": {
+      "x": 0.5,
+      "y": 0.6
+    },
+    "alt": "A long business jet cabin with warm ceiling light and paired leather seats.",
+    "credit": {
+      "work": "EBACE 2019, Le Grand-Saconnex (EB190586)",
+      "author": "Matti Blume",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:EBACE_2019,_Le_Grand-Saconnex_(EB190586).jpg",
+      "changes": "Cropped, resized and colour graded to match the homepage film. Our adaptation is released under the same licence."
+    }
+  },
+  "flight-deck": {
+    "src": "/media/scenes/flight-deck-1600.webp",
+    "srcSet": "/media/scenes/flight-deck-2560.webp 2560w, /media/scenes/flight-deck-1600.webp 1600w, /media/scenes/flight-deck-960.webp 960w",
+    "aspect": 2.273,
+    "focal": {
+      "x": 0.5,
+      "y": 0.4
+    },
+    "alt": "The flight deck of a business jet, its displays lit.",
+    "credit": {
+      "work": "Gulfstream G280, EBACE 2018, Le Grand-Saconnex (BL7C0664)",
+      "author": "Matti Blume",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Gulfstream_G280,_EBACE_2018,_Le_Grand-Saconnex_(BL7C0664).jpg",
+      "changes": "Cropped, resized and colour graded to match the homepage film. Our adaptation is released under the same licence."
+    }
+  },
+  "window-light": {
+    "src": "/media/scenes/window-light-1600.webp",
+    "srcSet": "/media/scenes/window-light-2560.webp 2560w, /media/scenes/window-light-1600.webp 1600w, /media/scenes/window-light-960.webp 960w",
+    "aspect": 0.9619,
+    "focal": {
+      "x": 0.45,
+      "y": 0.45
+    },
+    "alt": "First light through an aircraft window, above the clouds.",
+    "credit": {
+      "work": "Cabin window at sunrise (US Navy 101231-N-6070S-351)",
+      "author": "U.S. Navy photo by Mass Communication Specialist 2nd Class Justin E. Stumberg",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "source": "https://commons.wikimedia.org/wiki/File:US_Navy_101231-N-6070S-351_Aviation_Warfare_Systems_Operator_1st_Class_Andrew_Gill,_assigned_to_Fleet_Logistics_Support_Squadron_(VR)_51,.jpg",
+      "changes": "Cropped, resized and colour graded to match the homepage film."
+    }
+  }
+}
