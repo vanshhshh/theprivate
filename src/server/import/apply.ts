@@ -425,7 +425,9 @@ async function upsertOperator(ctx: RunContext, op: PlannedOperator) {
   }
 }
 
-const TX_OPTIONS = { timeout: 10 * 60_000, maxWait: 30_000, isolationLevel: 'Serializable' as const };
+// One transaction for the whole import. Over a distant database each row is a network round trip, so
+// IMPORT_TX_TIMEOUT_MINUTES lets an operator allow longer than the 10-minute default.
+const TX_OPTIONS = { timeout: Math.max(10, Number(process.env.IMPORT_TX_TIMEOUT_MINUTES) || 10) * 60_000, maxWait: 30_000, isolationLevel: 'Serializable' as const };
 
 /** Dry-run diff: executes the full apply inside a transaction that is always rolled back. */
 export async function diffAgainstDatabase(plan: ImportPlan, loaded: LoadedSource[]): Promise<DbDiff[]> {

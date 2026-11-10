@@ -22,7 +22,7 @@ export default async function EmptyLegs({ searchParams }: { searchParams: Promis
   return (
     <>
       <SceneHero
-        scene="wing-dusk"
+        scene="jet-inflight"
         eyebrow="One-way offers"
         title="Already flying"
         titleItalic="your way."

@@ -9,6 +9,7 @@ import type { Viewer } from '@/server/auth/viewer';
 import { prisma, type Tx } from '@/server/db/client';
 import { AppError, notFound } from '@/server/errors';
 import { notify, operatorMemberIds, staffWith } from '@/server/notifications';
+import { onboardingFeeSatisfied } from '@/server/payments/onboarding/service';
 import { storeUpload } from '@/server/storage';
 
 /** Checks that must be ACCEPTED before an operator can be VERIFIED. */
@@ -175,6 +176,7 @@ export async function changeOperatorLifecycle(viewer: Viewer, operatorId: string
     if (to === 'ACTIVE') {
       const agreement = await tx.agreement.findFirst({ where: { operatorId, status: 'SIGNED' } });
       if (!agreement) throw new AppError('INVALID_STATE', 'A signed agreement is required before activation.');
+      if (!(await onboardingFeeSatisfied(tx, operatorId))) throw new AppError('INVALID_STATE', 'The onboarding fee has not been paid. Activation follows payment and final review.');
     }
     if (['SUSPENDED', 'EXCLUDED', 'REJECTED'].includes(to) && note.trim().length < 5) throw new AppError('VALIDATION', 'Give a reason.', { note: 'Required' });
     await setLifecycle(tx, operatorId, to, 'STAFF', viewer.user.id, note);

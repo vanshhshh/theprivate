@@ -37,7 +37,7 @@ export default async function OperatorLayout({ children }: { children: React.Rea
         { items: [{ href: '/operator', label: 'Overview', exact: true }] },
         { title: 'Business', items: [{ href: '/operator/requests', label: 'Requests', badge: newRequests }, { href: '/operator/bookings', label: 'Bookings', badge: pendingBookings }, { href: '/operator/empty-legs', label: 'Empty legs', badge: enquiries }] },
         { title: 'Fleet', items: [{ href: '/operator/fleet', label: 'Aircraft' }] },
-        { title: 'Company', items: [{ href: '/operator/profile', label: 'Profile & team' }, { href: '/operator/verification', label: 'Verification' }, { href: '/operator/agreement', label: 'Agreement' }] },
+        { title: 'Company', items: [{ href: '/operator/profile', label: 'Profile & team' }, { href: '/operator/verification', label: 'Verification' }, { href: '/operator/agreement', label: 'Agreement' }, { href: '/operator/onboarding-payment', label: 'Onboarding fee' }] },
       ]}
       footer={<a href="/account" className="hover:text-paper">← Personal account</a>}
     >

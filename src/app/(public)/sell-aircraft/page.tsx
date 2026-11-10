@@ -14,7 +14,7 @@ export default async function Sell() {
   const v = await requireViewerPage('/sell-aircraft');
   return (
     <>
-    <SceneHero scene="ramp-dusk" size="band" eyebrow="Sell your aircraft" title="Present it" titleItalic="beautifully." lede="Share the details and photos. We review every listing before it appears, and buyers reach you only through us." />
+    <SceneHero scene="jets-ramp" size="band" eyebrow="Sell your aircraft" title="Present it" titleItalic="beautifully." lede="Share the details and photos. We review every listing before it appears, and buyers reach you only through us." />
     <div className="mx-auto max-w-[1080px] px-5 py-16 md:px-12">
       <ActionForm action={sellAircraftAction} className="flex flex-col gap-16">
         <fieldset className={`${chapter} md:grid-cols-3`}>

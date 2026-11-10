@@ -12,10 +12,10 @@ export default async function Operators() {
   const listed = await prisma.operator.findMany({ where: { isPubliclyListed: true, deletedAt: null, lifecycle: { in: ['VERIFIED', 'AGREEMENT_SIGNED', 'ACTIVE'] } }, orderBy: { displayName: 'asc' }, include: { _count: { select: { aircraft: { where: { reviewStatus: 'APPROVED', charterEligible: true } } } } } });
   return (
     <>
-      <SceneHero scene="flight-deck" size="band" eyebrow="Our flight partners" title="The people" titleItalic="who fly you." lede="Licensed air operators, each checked by ThePrivate before appearing here." />
+      <SceneHero scene="jet-inflight" size="band" eyebrow="Our flight partners" title="The people" titleItalic="who fly you." lede="Licensed air operators, each checked by ThePrivate before appearing here." />
       <section className="mx-auto max-w-[1320px] px-5 pt-16 md:px-12">
         {listed.length === 0 ? (
-          <SceneEmpty scene="ramp-dusk" eyebrow="Flight partners" title={<>Introductions <em>coming soon.</em></>} action={<LinkButton href="/charter" variant="light" size="lg" arrow>Plan a flight</LinkButton>}>
+          <SceneEmpty scene="cabin-aisle" eyebrow="Flight partners" title={<>Introductions <em>coming soon.</em></>} action={<LinkButton href="/charter" variant="light" size="lg" arrow>Plan a flight</LinkButton>}>
             Partners appear here once checked and ready to be listed. Your flight request already reaches them.
           </SceneEmpty>
         ) : (

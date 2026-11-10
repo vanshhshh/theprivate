@@ -274,6 +274,8 @@ model Operator {
   emptyLegs       EmptyLegListing[]
   documents       OperatorDocument[]
   registryEntries AuthorityRegistryEntry[]
+  invitations     OperatorInvitation[]
+  onboardingPayments OnboardingPayment[]
 
   @@index([countryCode, lifecycle])
   @@index([lifecycle, isPubliclyListed])
@@ -1565,4 +1567,175 @@ model ContactMessage {
 
   @@index([handledAt, createdAt])
   @@index([email, createdAt])
+}
+
+// =============================================================================================
+// Company invitations (onboarding outreach). Additive: no existing table is modified.
+// Raw invitation tokens are never stored: only their SHA-256 hash.
+// =============================================================================================
+
+enum InvitationStatus {
+  READY // created, nothing sent
+  PREVIEWED
+  TEST_SENT
+  APPROVED // approved for live sending, not yet queued
+  QUEUED
+  SENDING
+  SENT
+  DELIVERED // only with provider evidence
+  BOUNCED
+  OPENED // not set automatically: link visits by mail scanners are not reliable opens
+  CLAIMED
+  EXPIRED
+  REVOKED
+  UNSUBSCRIBED
+  FAILED
+}
+
+enum InvitationCampaignStatus {
+  DRAFT
+  APPROVED
+  SENDING
+  COMPLETED
+  CANCELLED
+}
+
+model InvitationCampaign {
+  id             String                   @id @default(cuid())
+  name           String
+  status         InvitationCampaignStatus @default(DRAFT)
+  createdById    String
+  approvedById   String?
+  approvedAt     DateTime?                @db.Timestamptz(3)
+  /// Exact recipient count the approver confirmed; sending refuses if it changed since.
+  approvedCount  Int?
+  createdAt      DateTime                 @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime                 @updatedAt @db.Timestamptz(3)
+  invitations    OperatorInvitation[]
+
+  @@index([status, createdAt])
+}
+
+model OperatorInvitation {
+  id                String              @id @default(cuid())
+  campaignId        String?
+  operatorId        String
+  contactId         String?
+  /// Normalised (lower-case) recipient address.
+  email             String
+  recipientName     String?
+  /// SHA-256 (hex) of the raw token. Null until a link has been issued.
+  tokenHash         String?             @unique
+  status            InvitationStatus    @default(READY)
+  /// Test invitations go to staff addresses and can never complete a claim.
+  isTest            Boolean             @default(false)
+  expiresAt         DateTime?           @db.Timestamptz(3)
+  sentAt            DateTime?           @db.Timestamptz(3)
+  firstVisitedAt    DateTime?           @db.Timestamptz(3)
+  claimedAt         DateTime?           @db.Timestamptz(3)
+  claimedByUserId   String?
+  claimId           String?
+  revokedAt         DateTime?           @db.Timestamptz(3)
+  sendAttempts      Int                 @default(0)
+  lastError         String?
+  providerMessageId String?
+  createdById       String
+  createdAt         DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime            @updatedAt @db.Timestamptz(3)
+  campaign          InvitationCampaign? @relation(fields: [campaignId], references: [id])
+  operator          Operator            @relation(fields: [operatorId], references: [id])
+  events            InvitationEvent[]
+
+  @@index([operatorId, status])
+  @@index([email])
+  @@index([campaignId, status])
+}
+
+model InvitationEvent {
+  id           String             @id @default(cuid())
+  invitationId String
+  type         String // created | previewed | test_sent | approved | queued | sent | send_failed | bounced | visited | claimed | revoked | expired | resent | unsubscribed
+  actorUserId  String?
+  detail       Json?
+  createdAt    DateTime           @default(now()) @db.Timestamptz(3)
+  invitation   OperatorInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([invitationId, createdAt])
+}
+
+enum SuppressionReason {
+  UNSUBSCRIBED
+  HARD_BOUNCE
+  COMPLAINT
+  MANUAL
+}
+
+/// Addresses that must never receive outreach again. Checked before every send.
+model EmailSuppression {
+  email     String            @id // lower-case
+  reason    SuppressionReason
+  source    String?
+  createdAt DateTime          @default(now()) @db.Timestamptz(3)
+}
+
+// =============================================================================================
+// One-time company onboarding fee. Separate from charter booking payments (model Payment).
+// Amounts are snapshotted in minor units when an order is created; cards are never stored.
+// =============================================================================================
+
+enum OnboardingPaymentStatus {
+  PAYMENT_PENDING
+  PAYMENT_PROCESSING
+  PAID
+  PAYMENT_FAILED
+  PAYMENT_CANCELLED
+  REFUND_PENDING
+  REFUNDED
+  PAYMENT_REVERSED
+}
+
+model OnboardingPayment {
+  id                String                  @id @default(cuid())
+  operatorId        String
+  status            OnboardingPaymentStatus @default(PAYMENT_PENDING)
+  provider          String // "sandbox" | "razorpay"
+  providerOrderId   String?
+  providerPaymentId String?
+  checkoutUrl       String?
+  /// Snapshot at order creation. Never taken from the browser.
+  feeMinor          Int
+  taxMinor          Int
+  totalMinor        Int
+  currency          String                  @db.Char(3)
+  taxLabel          String?
+  taxRateBps        Int?
+  refundPolicy      String?
+  receiptNumber     String?                 @unique
+  paidAt            DateTime?               @db.Timestamptz(3)
+  failureReason     String?
+  refundedMinor     Int                     @default(0)
+  createdById       String
+  createdAt         DateTime                @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime                @updatedAt @db.Timestamptz(3)
+  operator          Operator                @relation(fields: [operatorId], references: [id])
+  events            OnboardingPaymentEvent[]
+
+  @@unique([provider, providerOrderId])
+  @@index([operatorId, status])
+}
+
+model OnboardingPaymentEvent {
+  id              String            @id @default(cuid())
+  paymentId       String
+  type            String
+  fromStatus      String?
+  toStatus        String?
+  /// Provider's event id: unique, so a repeated webhook is recorded once.
+  providerEventId String?           @unique
+  actorUserId     String?
+  detail          Json?
+  createdAt       DateTime          @default(now()) @db.Timestamptz(3)
+  payment         OnboardingPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId, createdAt])
 }

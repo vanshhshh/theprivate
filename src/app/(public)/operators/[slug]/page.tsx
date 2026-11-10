@@ -33,7 +33,7 @@ export default async function OperatorProfile({ params }: { params: Promise<{ sl
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <SceneHero scene="flight-deck" size="band" eyebrow="Flight partner · checked by ThePrivate" title={op.displayName} lede={op.baseDescription ?? undefined}>
+      <SceneHero scene="jet-inflight" size="band" eyebrow="Flight partner · checked by ThePrivate" title={op.displayName} lede={op.baseDescription ?? undefined}>
         <LinkButton href="/charter" variant="light" arrow>Plan a flight</LinkButton>
       </SceneHero>
       <div className="mx-auto grid max-w-[1320px] gap-16 px-5 py-20 md:px-12 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">

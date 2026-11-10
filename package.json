@@ -22,6 +22,7 @@
     "import:apply": "tsx scripts/import.ts apply",
     "reference:airports": "tsx scripts/reference.ts",
     "worker": "tsx scripts/worker.ts",
+    "invitations:manifest": "tsx --conditions react-server scripts/invitations/manifest.ts",
     "admin:grant": "tsx scripts/admin.ts",
     "test:e2e": "playwright test",
     "lint:types": "tsc --noEmit"
@@ -36,6 +37,7 @@
     "gsap": "3.15.1",
     "motion": "14.9.1",
     "next": "16.4.5",
+    "nodemailer": "^7.0.13",
     "pdfjs-dist": "6.5.438",
     "pg": "8.23.1",
     "pino": "10.4.0",
@@ -49,6 +51,7 @@
     "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "4.3.4",
     "@types/node": "24.19.2",
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",

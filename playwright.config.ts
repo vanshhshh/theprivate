@@ -11,6 +11,9 @@ const env = {
   BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET ?? 'e2e-secret-not-for-production-use-only',
   STORAGE_LOCAL_DIR: './.data/e2e-storage',
   AUTH_RATE_LIMIT: 'off',
+  // Never reach a real mailbox or payment provider from tests.
+  SMTP_TRANSPORT: 'capture',
+  ONBOARDING_PAYMENT_PROVIDER: 'sandbox',
   LOG_LEVEL: 'warn',
 };
 process.env.E2E_DATABASE_URL = env.DATABASE_URL;

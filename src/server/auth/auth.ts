@@ -3,6 +3,17 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
 import { prisma } from '@/server/db/client';
+import { mailerConfig, sendEmail } from '@/server/email/mailer';
+
+/**
+ * E-mail verification is required in production once real SMTP is configured, so sign-up can never
+ * lock people out on a deployment that cannot send mail. Development and the capture-mode e2e run
+ * stay unverified; AUTH_REQUIRE_EMAIL_VERIFICATION=false switches it off explicitly.
+ */
+export function emailVerificationRequired() {
+  const m = mailerConfig();
+  return process.env.NODE_ENV === 'production' && process.env.AUTH_REQUIRE_EMAIL_VERIFICATION !== 'false' && m.missing.length === 0 && !m.capture;
+}
 
 /**
  * Authentication only (who you are). Authorisation (what you may do) lives in
@@ -17,8 +28,29 @@ export const auth = betterAuth({
     minPasswordLength: 10,
     maxPasswordLength: 128,
     autoSignIn: true,
-    // E-mail verification is enforced once an e-mail provider is configured (see integrations/messaging).
-    requireEmailVerification: false,
+    requireEmailVerification: emailVerificationRequired(),
+  },
+  emailVerification: {
+    sendOnSignUp: emailVerificationRequired(),
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    expiresIn: 60 * 60 * 24,
+    sendVerificationEmail: async ({ user, url }) => {
+      const first = (user.name ?? '').split(' ')[0] || 'there';
+      await sendEmail({
+        to: user.email,
+        subject: 'Confirm your e-mail for ThePrivate',
+        text: `Hello ${first},
+
+Please confirm your e-mail address to finish creating your ThePrivate account:
+
+${url}
+
+The link expires in 24 hours. If you did not create an account, you can ignore this e-mail.
+
+ThePrivate`,
+      });
+    },
   },
   session: { expiresIn: 60 * 60 * 24 * 14, updateAge: 60 * 60 * 24 },
   rateLimit: {

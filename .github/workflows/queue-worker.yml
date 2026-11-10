@@ -1,0 +1,30 @@
+# Runs one pass of ThePrivate's background queue (invitation e-mails, payment e-mails, sweeps)
+# every 5 minutes. Vercel Hobby crons are daily only, so this provides the sending pace.
+# It does nothing until both repository secrets are set:
+#   APP_URL      e.g. https://theprivate.in
+#   CRON_SECRET  the same value as CRON_SECRET in Vercel
+name: queue-worker
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: queue-worker
+  cancel-in-progress: false
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Run one queue pass
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "APP_URL or CRON_SECRET not set; skipping."
+            exit 0
+          fi
+          curl --fail-with-body --silent --show-error --max-time 90 \
+            -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/worker"

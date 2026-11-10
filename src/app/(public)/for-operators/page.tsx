@@ -16,7 +16,7 @@ const STEPS = [
 export default function ForOperators() {
   return (
     <>
-      <SceneHero scene="flight-deck" eyebrow="For air operators" title="Qualified requests," titleItalic="on your terms." lede="We send you requests only when one of your approved aircraft fits. You set the price, the inclusions and the validity. Nothing is booked until you confirm.">
+      <SceneHero scene="jets-ramp" eyebrow="For air operators" title="Qualified requests," titleItalic="on your terms." lede="We send you requests only when one of your approved aircraft fits. You set the price, the inclusions and the validity. Nothing is booked until you confirm.">
         <LinkButton href="/operator/onboarding" prefetch={false} variant="light" size="lg" arrow>Claim your profile</LinkButton>
       </SceneHero>
       <section className="mx-auto max-w-[1320px] px-5 py-24 md:px-12">

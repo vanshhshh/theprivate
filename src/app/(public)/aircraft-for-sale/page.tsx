@@ -21,7 +21,7 @@ export default async function Market({ searchParams }: { searchParams: Promise<R
   return (
     <>
       <SceneHero
-        scene="ramp-dusk"
+        scene="jets-ramp"
         eyebrow="Aircraft for sale"
         title="An aircraft"
         titleItalic="of your own."

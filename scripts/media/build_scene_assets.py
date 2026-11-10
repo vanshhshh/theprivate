@@ -30,26 +30,6 @@ WIDTHS = [2560, 1600, 960]
 
 # crop: (left, top, right, bottom) as fractions of the original. focal: object-position (x, y).
 SCENES = {
-    "ramp-dusk": {
-        "page": "https://commons.wikimedia.org/wiki/File:G550_(2632546219).jpg",
-        "title": "G550",
-        "author": "John Murphy",
-        "license": "CC BY-SA 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
-        "crop": (0, 0.02, 1, 0.92),
-        "focal": (0.5, 0.45),
-        "alt": "A business jet silhouetted on the ramp against a low golden sun.",
-    },
-    "wing-dusk": {
-        "page": "https://commons.wikimedia.org/wiki/File:Aircraft_cabin_window_views_of_sunset,_a_flight_towards_Kolkata_from_Hyderabad_04.jpg",
-        "title": "Aircraft cabin window views of sunset, a flight towards Kolkata from Hyderabad",
-        "author": "Pinakpani",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "crop": (0, 0.1, 1, 0.86),
-        "focal": (0.6, 0.5),
-        "alt": "An aircraft wing above a sea of clouds at sunset.",
-    },
     "cabin-aisle": {
         "page": "https://commons.wikimedia.org/wiki/File:Gulfstream_G550,_EBACE_2018,_Le_Grand-Saconnex_(BL7C0727).jpg",
         "title": "Gulfstream G550, EBACE 2018, Le Grand-Saconnex (BL7C0727)",
@@ -70,16 +50,26 @@ SCENES = {
         "focal": (0.5, 0.6),
         "alt": "A long business jet cabin with warm ceiling light and paired leather seats.",
     },
-    "flight-deck": {
-        "page": "https://commons.wikimedia.org/wiki/File:Gulfstream_G280,_EBACE_2018,_Le_Grand-Saconnex_(BL7C0664).jpg",
-        "title": "Gulfstream G280, EBACE 2018, Le Grand-Saconnex (BL7C0664)",
+    "jet-inflight": {
+        "page": "https://commons.wikimedia.org/wiki/File:Dassault_Falcon_6X_at_Paris_Air_Show_2025_(10).jpg",
+        "title": "Dassault Falcon 6X at Paris Air Show 2025",
+        "author": "Ibex73",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "crop": (0, 0.08, 1, 0.92),
+        "focal": (0.46, 0.5),
+        "alt": "A business jet in flight, gear up, banking against a clear sky.",
+    },
+    "jets-ramp": {
+        "page": "https://commons.wikimedia.org/wiki/File:Static_display,_EBACE_2018,_Le_Grand-Saconnex_(BL7C0538).jpg",
+        "title": "Static display, EBACE 2018, Le Grand-Saconnex (BL7C0538)",
         "author": "Matti Blume",
         "license": "CC BY-SA 4.0",
         "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        # The instrument panel only: the windscreen view (a trade-show ramp) is cropped away.
-        "crop": (0, 0.34, 1, 1),
-        "focal": (0.5, 0.4),
-        "alt": "The flight deck of a business jet, its displays lit.",
+        # Cropped to the aircraft line-up (a visitor at the far left edge of the original is excluded).
+        "crop": (0.06, 0.04, 1, 0.94),
+        "focal": (0.4, 0.45),
+        "alt": "A line of business jets on display, tails and engines in sunlight.",
     },
     "window-light": {
         "page": "https://commons.wikimedia.org/wiki/File:US_Navy_101231-N-6070S-351_Aviation_Warfare_Systems_Operator_1st_Class_Andrew_Gill,_assigned_to_Fleet_Logistics_Support_Squadron_(VR)_51,.jpg",

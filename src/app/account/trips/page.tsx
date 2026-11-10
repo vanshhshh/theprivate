@@ -18,7 +18,7 @@ export default async function Trips() {
     <>
       <PageHeader eyebrow="Your journeys" title="Trips & requests" actions={<LinkButton href="/charter" arrow>Plan a flight</LinkButton>} />
       {rfqs.length === 0 ? (
-        <SceneEmpty scene="wing-dusk" eyebrow="Trips & requests" title={<>Your next journey <em>starts here.</em></>} action={<LinkButton href="/charter" variant="light" size="lg" arrow>Plan a flight</LinkButton>}>
+        <SceneEmpty scene="sky-horizon" eyebrow="Trips & requests" title={<>Your next journey <em>starts here.</em></>} action={<LinkButton href="/charter" variant="light" size="lg" arrow>Plan a flight</LinkButton>}>
           Every request you send appears here, with the offers you receive.
         </SceneEmpty>
       ) : (

@@ -18,7 +18,7 @@ export default async function MyListings() {
     <>
       <PageHeader eyebrow="Your journeys" title="Aircraft listings" actions={<LinkButton href="/sell-aircraft" arrow>List an aircraft</LinkButton>} />
       {listings.length === 0 ? (
-        <SceneEmpty scene="ramp-dusk" eyebrow="Aircraft listings" title={<>Selling <em>an aircraft?</em></>} action={<LinkButton href="/sell-aircraft" variant="light" size="lg" arrow>List your aircraft</LinkButton>}>
+        <SceneEmpty scene="jets-ramp" eyebrow="Aircraft listings" title={<>Selling <em>an aircraft?</em></>} action={<LinkButton href="/sell-aircraft" variant="light" size="lg" arrow>List your aircraft</LinkButton>}>
           We review every listing, then introduce serious buyers. Your details stay private.
         </SceneEmpty>
       ) : (

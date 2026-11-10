@@ -31,7 +31,13 @@ export function SignInForm({ next }: { next: string | null }) {
         const { error } = await authClient.signIn.email({ email: String(fd.get('email')), password: String(fd.get('password')) });
         setPending(false);
         if (error) {
-          setError(error.status === 429 ? 'Too many attempts. Please wait a minute and try again.' : 'E-mail or password is incorrect.');
+          setError(
+            error.status === 429
+              ? 'Too many attempts. Please wait a minute and try again.'
+              : error.status === 403
+                ? 'Please confirm your e-mail address first. We have sent you a new confirmation link.'
+                : 'E-mail or password is incorrect.',
+          );
           return;
         }
         router.push(safeNext(next));
@@ -59,6 +65,20 @@ export function SignUpForm({ next }: { next: string | null }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  if (sentTo) {
+    return (
+      <div role="status" className="flex flex-col gap-4">
+        <h2 className="font-display text-[28px] leading-tight">Check your inbox</h2>
+        <p className="text-[15px] leading-relaxed text-ink-2">
+          We have sent a confirmation link to <strong>{sentTo}</strong>. Open it to finish creating your account; it expires in 24 hours.
+        </p>
+        <p className="text-sm text-muted">
+          Nothing arrived? Check your spam folder, or <Link className="text-sectional underline underline-offset-4" href={`/sign-in${next ? `?next=${encodeURIComponent(next)}` : ''}`}>sign in</Link> to receive a new link.
+        </p>
+      </div>
+    );
+  }
   return (
     <form
       className="flex flex-col gap-6"
@@ -70,12 +90,15 @@ export function SignUpForm({ next }: { next: string | null }) {
         if (!fd.get('terms')) return setError('Please accept the terms and privacy policy.');
         setPending(true);
         setError(null);
-        const { error } = await authClient.signUp.email({ name: String(fd.get('name')).trim(), email: String(fd.get('email')).trim(), password });
+        const email = String(fd.get('email')).trim();
+        const { data, error } = await authClient.signUp.email({ name: String(fd.get('name')).trim(), email, password, callbackURL: safeNext(next) });
         setPending(false);
         if (error) {
           setError(error.code === 'USER_ALREADY_EXISTS' || error.status === 422 ? 'An account with this e-mail already exists.' : error.status === 429 ? 'Too many attempts. Try again later.' : error.message ?? 'Could not create the account.');
           return;
         }
+        // No session means e-mail verification is required: the confirmation link is on its way.
+        if (!data?.token) return setSentTo(email);
         router.push(safeNext(next));
         router.refresh();
       }}

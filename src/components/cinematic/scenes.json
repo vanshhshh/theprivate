@@ -1,40 +1,4 @@
 {
-  "ramp-dusk": {
-    "src": "/media/scenes/ramp-dusk-1600.webp",
-    "srcSet": "/media/scenes/ramp-dusk-2560.webp 2560w, /media/scenes/ramp-dusk-1600.webp 1600w, /media/scenes/ramp-dusk-960.webp 960w",
-    "aspect": 1.6665,
-    "focal": {
-      "x": 0.5,
-      "y": 0.45
-    },
-    "alt": "A business jet silhouetted on the ramp against a low golden sun.",
-    "credit": {
-      "work": "G550",
-      "author": "John Murphy",
-      "license": "CC BY-SA 2.0",
-      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:G550_(2632546219).jpg",
-      "changes": "Cropped, resized and colour graded to match the homepage film. Our adaptation is released under the same licence."
-    }
-  },
-  "wing-dusk": {
-    "src": "/media/scenes/wing-dusk-1600.webp",
-    "srcSet": "/media/scenes/wing-dusk-2560.webp 2560w, /media/scenes/wing-dusk-1600.webp 1600w, /media/scenes/wing-dusk-960.webp 960w",
-    "aspect": 1.7541,
-    "focal": {
-      "x": 0.6,
-      "y": 0.5
-    },
-    "alt": "An aircraft wing above a sea of clouds at sunset.",
-    "credit": {
-      "work": "Aircraft cabin window views of sunset, a flight towards Kolkata from Hyderabad",
-      "author": "Pinakpani",
-      "license": "CC BY-SA 4.0",
-      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:Aircraft_cabin_window_views_of_sunset,_a_flight_towards_Kolkata_from_Hyderabad_04.jpg",
-      "changes": "Cropped, resized and colour graded to match the homepage film. Our adaptation is released under the same licence."
-    }
-  },
   "cabin-aisle": {
     "src": "/media/scenes/cabin-aisle-1600.webp",
     "srcSet": "/media/scenes/cabin-aisle-2560.webp 2560w, /media/scenes/cabin-aisle-1600.webp 1600w, /media/scenes/cabin-aisle-960.webp 960w",
@@ -71,21 +35,39 @@
       "changes": "Cropped, resized and colour graded to match the homepage film. Our adaptation is released under the same licence."
     }
   },
-  "flight-deck": {
-    "src": "/media/scenes/flight-deck-1600.webp",
-    "srcSet": "/media/scenes/flight-deck-2560.webp 2560w, /media/scenes/flight-deck-1600.webp 1600w, /media/scenes/flight-deck-960.webp 960w",
-    "aspect": 2.273,
+  "jet-inflight": {
+    "src": "/media/scenes/jet-inflight-1600.webp",
+    "srcSet": "/media/scenes/jet-inflight-2560.webp 2560w, /media/scenes/jet-inflight-1600.webp 1600w, /media/scenes/jet-inflight-960.webp 960w",
+    "aspect": 1.7866,
     "focal": {
-      "x": 0.5,
-      "y": 0.4
+      "x": 0.46,
+      "y": 0.5
     },
-    "alt": "The flight deck of a business jet, its displays lit.",
+    "alt": "A business jet in flight, gear up, banking against a clear sky.",
     "credit": {
-      "work": "Gulfstream G280, EBACE 2018, Le Grand-Saconnex (BL7C0664)",
+      "work": "Dassault Falcon 6X at Paris Air Show 2025",
+      "author": "Ibex73",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Dassault_Falcon_6X_at_Paris_Air_Show_2025_(10).jpg",
+      "changes": "Cropped, resized and colour graded to match the homepage film."
+    }
+  },
+  "jets-ramp": {
+    "src": "/media/scenes/jets-ramp-1600.webp",
+    "srcSet": "/media/scenes/jets-ramp-2560.webp 2560w, /media/scenes/jets-ramp-1600.webp 1600w, /media/scenes/jets-ramp-960.webp 960w",
+    "aspect": 1.5666,
+    "focal": {
+      "x": 0.4,
+      "y": 0.45
+    },
+    "alt": "A line of business jets on display, tails and engines in sunlight.",
+    "credit": {
+      "work": "Static display, EBACE 2018, Le Grand-Saconnex (BL7C0538)",
       "author": "Matti Blume",
       "license": "CC BY-SA 4.0",
       "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:Gulfstream_G280,_EBACE_2018,_Le_Grand-Saconnex_(BL7C0664).jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:Static_display,_EBACE_2018,_Le_Grand-Saconnex_(BL7C0538).jpg",
       "changes": "Cropped, resized and colour graded to match the homepage film. Our adaptation is released under the same licence."
     }
   },

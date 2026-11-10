@@ -12,8 +12,8 @@ import { claimAction } from '../actions';
 
 export const metadata = { title: 'Join as an operator' };
 
-export default async function Onboarding({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const { q } = await searchParams;
+export default async function Onboarding({ searchParams }: { searchParams: Promise<{ q?: string; claimed?: string }> }) {
+  const { q, claimed } = await searchParams;
   const v = await requireViewerPage('/operator/onboarding');
   const [results, claims] = await Promise.all([
     q ? claimDirectory(q) : Promise.resolve([]),
@@ -22,6 +22,13 @@ export default async function Onboarding({ searchParams }: { searchParams: Promi
   return (
     <>
         <PageHeader eyebrow="Operators" title="Set up your operator workspace" lede="Find your company in our directory of licensed operators and claim it, or ask us to create a new profile. Every claim is reviewed by our supply team. Submitting one does not give you access by itself." />
+        {claimed && (
+          <div className="mb-10">
+            <Notice tone="success" title="Your claim is with our team">
+              We will review it and e-mail you when it is decided. Claiming does not verify or publish your company. Once approved, your workspace opens and the onboarding steps are, in order: review your company profile, upload verification documents, sign the agreement, pay the onboarding fee (when applicable), and a final review before activation.
+            </Notice>
+          </div>
+        )}
         {v.memberships.length > 0 && <div className="mb-10"><Notice tone="success">You already belong to an operator. <Link className="underline" href="/operator">Open the workspace →</Link></Notice></div>}
 
         {claims.length > 0 && (
