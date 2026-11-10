@@ -11,7 +11,8 @@ function create(): PrismaClient {
     // Hosted Postgres (Neon) adds network round trips and can resume from scale-to-zero, so the
     // 5 s interactive-transaction default is too tight. Calls that pass their own options
     // (e.g. the data import) still override this.
-    transactionOptions: { maxWait: 10_000, timeout: 15_000 },
+    // DB_TX_TIMEOUT_MS lets one-off scripts run far from the database (e.g. from India to us-east-2).
+    transactionOptions: { maxWait: 10_000, timeout: Number(process.env.DB_TX_TIMEOUT_MS) || 15_000 },
   });
 }
 
