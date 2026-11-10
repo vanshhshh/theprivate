@@ -120,4 +120,13 @@ Only allowed transitions apply (`canTransition`); anything else is recorded and 
   - company isolation;
   - test keys refused on Production.
 
-**Not yet done:** a completed test-card payment through the modal. Use Razorpay's test card on a local or Preview deployment. Live keys have not been used.
+**End-to-end test-mode payment (2026-11-10):** run on the local production build against the test database, using the real Razorpay test API and the test card 4100 2800 0000 1007.
+- **US$5,000 was refused by Razorpay:** "Amount exceeds maximum amount allowed". This is a per-transaction limit on the Razorpay account. **Before going live, ask Razorpay to raise the maximum transaction amount and enable international card payments for at least US$5,000.**
+- **US$5 (test database only) succeeded:**
+  - modal → test bank "Success" → signature verified → payment fetched from Razorpay;
+  - `PAID` with receipt `TPO-20261110-SLLLM5`;
+  - events `checkout_created → provider.paid`;
+  - the confirmation page shows the transaction reference.
+- **UPI:** for INR, the account offers only UPI **QR** (no UPI-ID entry field, consistent with NPCI's phase-out of collect requests), so `test@razorpay` cannot be entered. UPI is also unavailable for USD charges.
+
+Live keys have not been used.
