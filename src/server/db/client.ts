@@ -15,8 +15,22 @@ function create(): PrismaClient {
   });
 }
 
-/** One client per process (survives Next.js dev hot reloads). */
-export const prisma: PrismaClient = globalForPrisma.prisma ?? create();
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+/**
+ * One client per process (survives Next.js dev hot reloads), created on FIRST USE rather than at
+ * import: `next build` imports routes to collect their configuration, and a build must not need
+ * a database (e.g. on Vercel before env vars exist). A missing DATABASE_URL still fails loudly the
+ * moment a query is made.
+ */
+function client(): PrismaClient {
+  return (globalForPrisma.prisma ??= create());
+}
+
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const c = client();
+    const value = Reflect.get(c, prop, c);
+    return typeof value === 'function' ? value.bind(c) : value;
+  },
+});
 
 export type { TransactionClient as Tx } from '@/generated/prisma/internal/prismaNamespace';

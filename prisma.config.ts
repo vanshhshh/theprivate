@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { defineConfig, env } from 'prisma/config';
+import { defineConfig } from 'prisma/config';
 
 // Prisma 7 does not load .env automatically; Node's built-in loader keeps this dependency-free.
 if (existsSync('.env')) process.loadEnvFile('.env');
@@ -12,5 +12,7 @@ if (existsSync('.env')) process.loadEnvFile('.env');
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: { path: 'prisma/migrations' },
-  datasource: { url: process.env.DATABASE_URL_UNPOOLED || env('DATABASE_URL') },
+  // Read lazily: `prisma generate` (run by `npm run build`, e.g. on Vercel) needs no database, so a
+  // missing URL must not fail it. Commands that do connect (migrate) report the missing URL themselves.
+  datasource: { url: process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || '' },
 });
