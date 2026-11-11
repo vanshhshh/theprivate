@@ -42,6 +42,11 @@ npx cap open ios         # Xcode → choose the App scheme → a simulator → R
 
 **Export compliance:** the app uses only standard HTTPS and the iOS Keychain. The usual answer is "exempt" (`ITSAppUsesNonExemptEncryption = false`), to be confirmed by you as the account holder at submission.
 
+## Apple account (2026-11-11)
+- **Team ID:** `3J5MTMY4J8`, set as `DEVELOPMENT_TEAM` in the Xcode project.
+- **Account type:** Individual. The App Store would list **the account holder's personal name** as the seller. Decide on an Organisation account (D-U-N-S) before paying, if ThePrivate is a company.
+- **Membership:** **not yet paid.** Until it is, there is no APNs key, App Store Connect API key, app record, TestFlight or Associated Domains. iOS work is paused at "project ready"; Android continues.
+
 ## Placeholders that are not invented
 These are left blank on purpose until you provide them:
 - Team ID;
