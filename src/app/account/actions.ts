@@ -8,6 +8,7 @@ import { runAction } from '@/server/action';
 import { requireViewer } from '@/server/auth/viewer';
 import { prisma } from '@/server/db/client';
 import { AppError } from '@/server/errors';
+import { saveSettings } from '@/server/services/account';
 import { cancelBooking } from '@/server/services/bookings';
 import { acceptQuote, declineQuote } from '@/server/services/quotes';
 import { cancelRfq } from '@/server/services/rfq';
@@ -43,28 +44,8 @@ export async function cancelBookingAction(_: FormState, fd: FormData): Promise<F
   return res;
 }
 
-const settingsSchema = z.object({
-  name: z.string().trim().min(2).max(120),
-  phone: z.string().trim().max(30).optional(),
-  companyName: z.string().trim().max(160).optional(),
-  preferredCurrency: z.enum(['INR', 'AED', 'USD', 'EUR', 'GBP', 'SGD']),
-  timezone: z.string().max(60),
-  marketingOptIn: z.coerce.boolean().optional(),
-});
-
 export async function saveSettingsAction(_: FormState, fd: FormData): Promise<FormState> {
-  const res = await runAction(async () => {
-    const v = await requireViewer();
-    const input = settingsSchema.parse(Object.fromEntries(fd));
-    try {
-      new Intl.DateTimeFormat('en', { timeZone: input.timezone });
-    } catch {
-      throw new AppError('VALIDATION', 'Unknown timezone.', { timezone: 'Unknown timezone' });
-    }
-    await prisma.user.update({ where: { id: v.user.id }, data: { name: input.name, phone: input.phone || null, timezone: input.timezone } });
-    const profile = { companyName: input.companyName || null, preferredCurrency: input.preferredCurrency, marketingOptIn: Boolean(input.marketingOptIn) };
-    await prisma.customerProfile.upsert({ where: { userId: v.user.id }, create: { userId: v.user.id, ...profile }, update: profile });
-  }, 'Settings saved.');
+  const res = await runAction(async () => saveSettings(await requireViewer(), Object.fromEntries(fd)), 'Settings saved.');
   revalidatePath('/account');
   return res;
 }

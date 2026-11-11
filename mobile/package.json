@@ -17,13 +17,17 @@
     "icons": "node scripts/render-brand-assets.mjs && capacitor-assets generate --android --ios --assetPath resources --iconBackgroundColor \"#0e1418\" --splashBackgroundColor \"#0e1418\" --splashBackgroundColorDark \"#0e1418\""
   },
   "dependencies": {
+    "@aparajita/capacitor-secure-storage": "^8.0.1",
     "@capacitor/android": "8.6.0",
     "@capacitor/app": "8.1.2",
+    "@capacitor/browser": "^8.0.5",
     "@capacitor/core": "8.6.0",
     "@capacitor/haptics": "8.0.2",
     "@capacitor/ios": "8.6.0",
     "@capacitor/keyboard": "8.0.6",
     "@capacitor/network": "8.0.1",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/share": "^8.0.3",
     "@capacitor/splash-screen": "8.0.2",
     "@capacitor/status-bar": "8.0.4",
     "@fontsource-variable/instrument-sans": "5.3.0",

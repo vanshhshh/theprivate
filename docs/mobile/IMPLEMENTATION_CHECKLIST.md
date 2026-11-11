@@ -11,7 +11,7 @@ Updated after every phase. Legend: ✅ done · 🔄 in progress · ⬜ not start
 - ✅ [MOBILE_PRODUCT_SPEC.md](MOBILE_PRODUCT_SPEC.md): navigation, screens, data sources, route inventory, journeys
 
 ## Phase 3: Design system
-- 🔄 MOBILE_DESIGN_SYSTEM.md: tokens are already shared with the website (enforced by test); the document is next
+- ✅ [MOBILE_DESIGN_SYSTEM.md](MOBILE_DESIGN_SYSTEM.md): tokens shared with the website (enforced by test), type, layout, imagery, motion, components, accessibility
 
 ## Phase 4: Native foundation
 - ✅ `mobile/` package (Vite 8, React 19.3, TS 6, React Router 7, Tailwind 4), isolated from the website build (root tsconfig excludes it)
@@ -28,15 +28,23 @@ Updated after every phase. Legend: ✅ done · 🔄 in progress · ⬜ not start
 - ✅ Shell: five-tab navigation, safe areas, a cinematic Discover hero using licensed photography, a design-token drift test
 - ⚠️ Emulator: usable only with other apps closed (7.8 GB RAM; about 200 MB free during the session)
 
-## Phase 5: Core app (+ backend B1, B2 locally)
-- ⬜ B1: bearer plugin and trusted origins (local)
-- ⬜ B2: `/api/mobile/v1/*` and CORS (local), with tests
-- ⬜ API client: typed, validated, cancellation, timeouts, safe retries
-- ⬜ Auth: sign in, sign up, verification return, sign out, session restore
-- ⬜ Discover · Planner · Airport search · Results · Request
-- ⬜ Journeys · Request detail and offer comparison · Accept and decline · Booking detail
-- ⬜ Explore: one-way offers and aircraft for sale, with enquiries
-- ⬜ Inbox · Profile and settings · Delete account (B4)
+## Phase 5: Core app (+ backend B1, B2 locally) — 2026-11-11
+- ✅ B1: Better Auth `bearer()` plugin and trusted app origins (local, **not deployed**)
+- ✅ B2: 20 `/api/mobile/v1/*` handlers over existing services, app-only CORS, customer-safe projections ([MOBILE_API_INTEGRATION.md](MOBILE_API_INTEGRATION.md))
+  - 7 integration tests with real bearer sessions; the full website suite is 116/116
+- ✅ API client: typed, timeouts, cancellation, GET-only retry, no automatic retry of commercial actions, session-loss handling
+- ✅ Auth: sign in, create account ("check your inbox" when verification is required), restore, sign out with server revocation; token in Keychain or Keystore ([MOBILE_AUTHENTICATION.md](MOBILE_AUTHENTICATION.md))
+- ✅ Discover: live rails and next journey · Planner · Airport search sheet · Results (honest empty state) · Flight request (draft saved, sign-in keeps input)
+- ✅ Journeys (grouped) · Request detail with offer comparison and a confirmation sheet for acceptance · Decline / cancel · Booking detail (local times, true payment state)
+- ✅ Explore: one-way offers and aircraft for sale, details, enquiries, share (public URLs only)
+- ✅ Inbox (web links mapped to app screens) · Profile (edit, sign out, partner workspace link) · Android back button · deep-link router
+- ⬜ B4 account deletion endpoint: the app currently routes the request to the contact page (stated plainly)
+- ✅ End-to-end in a phone viewport against the local backend (test database): browse → search → sign up → submit request TP-22RYY8 (7 partners contacted) → Journeys → Inbox → Profile, with **0 console or server errors**
+- Fixed during testing:
+  - Chromium's `scrollTo()` Promise crashed screen changes;
+  - the draft wasn't loaded yet on a cold start;
+  - a redirect after submission;
+  - the absolute `callbackURL` was rejected.
 
 ## Phase 6: Native capabilities
 - ⬜ Secure storage (Keychain / Keystore)

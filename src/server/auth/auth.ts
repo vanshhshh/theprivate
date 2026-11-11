@@ -2,6 +2,8 @@ import 'server-only';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
+import { bearer } from 'better-auth/plugins';
+import { MOBILE_APP_ORIGINS } from '@/server/mobile/origins';
 import { prisma } from '@/server/db/client';
 import { mailerConfig, sendEmail } from '@/server/email/mailer';
 
@@ -63,5 +65,8 @@ ThePrivate`,
     },
   },
   advanced: { useSecureCookies: process.env.NODE_ENV === 'production' },
-  plugins: [nextCookies()],
+  // The mobile app (Capacitor) is served from its own origin and authenticates with
+  // `Authorization: Bearer <session token>`; bearer() maps that onto the same Session rows.
+  trustedOrigins: MOBILE_APP_ORIGINS,
+  plugins: [nextCookies(), bearer()],
 });

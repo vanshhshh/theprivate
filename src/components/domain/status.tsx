@@ -159,6 +159,12 @@ export function statusLabel(kind: StatusKind, value: string, audience: Audience 
   return def(kind, value, audience)[0];
 }
 
+/** Label and tone together (used by the mobile API, so the app shows the same wording and meaning). */
+export function statusInfo(kind: StatusKind, value: string, audience: Audience = 'internal') {
+  const [label, tone] = def(kind, value, audience);
+  return { value, label, tone };
+}
+
 export function Status({ kind, value, audience = 'internal' }: { kind: StatusKind; value: string; audience?: Audience }) {
   const [label, tone] = def(kind, value, audience);
   return <Pill tone={tone}>{label}</Pill>;

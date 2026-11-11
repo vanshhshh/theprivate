@@ -10,9 +10,13 @@ import { permissionsFor, type Permission } from './permissions';
 
 export const ACTIVE_OPERATOR_COOKIE = 'tp_operator';
 
-/** The signed-in user with roles, permissions and ACTIVE operator memberships (per request). */
-export const getViewer = cache(async () => {
-  const session = await auth.api.getSession({ headers: await headers() });
+/**
+ * Resolves the signed-in user from request headers: a session cookie (website) or an
+ * `Authorization: Bearer <session token>` header (mobile app, via Better Auth's bearer plugin).
+ * Both resolve the same Session rows, so expiry, revocation and disabled accounts behave alike.
+ */
+export async function viewerFromHeaders(h: Headers) {
+  const session = await auth.api.getSession({ headers: h });
   if (!session) return null;
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
@@ -24,9 +28,12 @@ export const getViewer = cache(async () => {
   if (!user || user.disabledAt || user.deletedAt) return null;
   const roles = user.staffRoles.map((r) => r.role);
   return { user, roles, permissions: permissionsFor(roles), memberships: user.memberships, isStaff: roles.length > 0 };
-});
+}
 
-export type Viewer = NonNullable<Awaited<ReturnType<typeof getViewer>>>;
+/** The signed-in user with roles, permissions and ACTIVE operator memberships (per request). */
+export const getViewer = cache(async () => viewerFromHeaders(await headers()));
+
+export type Viewer = NonNullable<Awaited<ReturnType<typeof viewerFromHeaders>>>;
 
 /** Pages: redirect to sign-in. */
 export async function requireViewerPage(next: string): Promise<Viewer> {
