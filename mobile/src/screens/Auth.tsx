@@ -1,11 +1,11 @@
 import { Browser } from '@capacitor/browser';
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { ApiError } from '@/api/client';
+import { ApiError, authCall } from '@/api/client';
 import { useAuth } from '@/auth/AuthProvider';
 import { env } from '@/config/env';
 import { Plate, PLATES } from '@/components/Plate';
-import { Button, Field, inputClass, Notice, TopBar } from '@/components/ui';
+import { Button, Field, inputClass, Notice, Sheet, TopBar } from '@/components/ui';
 
 /** Only in-app paths may be used as a return destination. */
 function safeNext(next: string | null) {
@@ -31,6 +31,45 @@ function AuthFrame({ title, eyebrow, children }: { title: React.ReactNode; eyebr
   );
 }
 
+/** Sends a reset link; the new password is chosen on theprivate.in, then the customer signs in here. */
+function ForgotPassword({ open, onClose, initialEmail }: { open: boolean; onClose: () => void; initialEmail: string }) {
+  const [email, setEmail] = useState(initialEmail);
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const send = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await authCall('/request-password-reset', { email: email.trim().toLowerCase(), redirectTo: '/reset-password' });
+      setSent(true);
+    } catch (e) {
+      const a = e instanceof ApiError ? e : null;
+      if (a?.status === 429) setError('Too many attempts. Please wait a minute and try again.');
+      else if (a?.code === 'NETWORK') setError(a.message);
+      else setSent(true); // never reveal whether an account exists
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Sheet open={open} title="Reset your password" onClose={onClose}>
+      {sent ? (
+        <div className="pb-4">
+          <p className="text-[15px] leading-relaxed text-ink-2">If an account exists for <strong>{email}</strong>, we have sent a link to choose a new password. It works once and expires in one hour. Then come back here and sign in.</p>
+          <Button className="mt-6 w-full" onClick={onClose}>Back to sign in</Button>
+        </div>
+      ) : (
+        <div className="space-y-6 pb-4">
+          <Field label="E-mail">{(id) => <input id={id} type="email" inputMode="email" autoComplete="email" autoCapitalize="none" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />}</Field>
+          {error && <Notice tone="danger">{error}</Notice>}
+          <Button busy={busy} disabled={!email.includes('@')} className="w-full" onClick={() => void send()}>Send reset link</Button>
+        </div>
+      )}
+    </Sheet>
+  );
+}
+
 export function SignIn() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -39,6 +78,7 @@ export function SignIn() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forgot, setForgot] = useState(false);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -72,8 +112,8 @@ export function SignIn() {
         <Button type="submit" busy={busy} disabled={!email || !password} className="mt-2 w-full">
           Sign in
         </Button>
-        <button type="button" onClick={() => void Browser.open({ url: `${env.apiBaseUrl}/contact` })} className="text-left text-[14px] text-sectional underline underline-offset-4">
-          Forgotten your password? Contact us
+        <button type="button" onClick={() => setForgot(true)} className="text-left text-[14px] text-sectional underline underline-offset-4">
+          Forgotten your password?
         </button>
         <p className="text-[14px] text-ink-2">
           New to ThePrivate?{' '}
@@ -82,6 +122,7 @@ export function SignIn() {
           </Link>
         </p>
       </form>
+      <ForgotPassword open={forgot} onClose={() => setForgot(false)} initialEmail={email} />
     </AuthFrame>
   );
 }

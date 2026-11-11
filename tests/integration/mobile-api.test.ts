@@ -192,3 +192,108 @@ describe('mobile API (test database, bearer sessions)', () => {
     expect((await call('me', { token: g.token })).status).toBe(401);
   });
 });
+
+describe('account recovery and deletion (test database)', () => {
+  it('resets a password through the e-mailed link, once, and signs out everywhere', async () => {
+    const { captured } = await import('@/server/email/mailer');
+    const h = await customer('reset');
+    expect((await call('me', { token: h.token })).status).toBe(200);
+    const before = captured.length;
+    await auth.api.requestPasswordReset({ body: { email: h.user.email, redirectTo: '/reset-password' } });
+    const mail = captured.slice(before).find((m) => m.to === h.user.email)!;
+    expect(mail.subject).toMatch(/Reset your ThePrivate password/);
+    const token = /reset-password\/([A-Za-z0-9_-]+)/.exec(mail.text)![1]!;
+
+    // Unknown addresses get the same (silent) treatment: no e-mail, no error, nothing revealed.
+    const n = captured.length;
+    await auth.api.requestPasswordReset({ body: { email: `nobody-${tag}@mobile.example`, redirectTo: '/reset-password' } });
+    expect(captured.length).toBe(n);
+
+    await auth.api.resetPassword({ body: { newPassword: 'a-brand-new-password', token } });
+    expect((await call('me', { token: h.token })).status).toBe(401); // old sessions revoked
+    await expect(auth.api.resetPassword({ body: { newPassword: 'another-password-123', token } })).rejects.toThrow(); // single use
+    const again = await auth.api.signInEmail({ body: { email: h.user.email, password: 'a-brand-new-password' } });
+    expect(again.token).toBeTruthy();
+  });
+
+  it('records one deletion request per account, notifies staff and confirms by e-mail', async () => {
+    const d = await customer('delete');
+    expect((await call('me/deletion', { method: 'POST', token: d.token, body: {} })).status).toBe(400); // explicit confirmation
+    const first = await call('me/deletion', { method: 'POST', token: d.token, body: { confirm: true, reason: 'No longer needed' } });
+    expect(first.json.data.alreadyRequested).toBe(false);
+    const second = await call('me/deletion', { method: 'POST', token: d.token, body: { confirm: true } });
+    expect(second.json.data.alreadyRequested).toBe(true);
+    expect(await prisma.contactMessage.count({ where: { userId: d.user.id, message: { startsWith: '[ACCOUNT DELETION REQUEST]' } } })).toBe(1);
+    expect(await prisma.job.count({ where: { type: 'email.send', dedupeKey: { startsWith: 'email:account-deletion:' }, payload: { path: ['to'], equals: d.user.email } } })).toBe(1);
+    expect(await prisma.auditEvent.count({ where: { action: 'account.deletion_request', entityId: d.user.id } })).toBe(1);
+    expect((await call('me', { token: d.token })).json.data.deletionRequestedAt).toBeTruthy();
+    expect((await call('me/deletion', { method: 'POST', body: { confirm: true } })).status).toBe(401);
+  });
+});
+
+describe('push notifications (test database, simulated FCM)', () => {
+  it('registers devices per account, moves a token on account switch, and only the owner can unregister', async () => {
+    const x = await customer('px');
+    const y = await customer('py');
+    const token = `fcm-${tag}-${'x'.repeat(40)}`;
+    expect((await call('devices', { method: 'POST', token: x.token, body: { token, platform: 'ANDROID', appVersion: '0.1.0' } })).status).toBe(200);
+    const { notify } = await import('@/server/notifications');
+    await notify({ userIds: [x.user.id], type: 'rfq.quote_received', title: 'New quote for TP-SECRET', body: 'BOM to DXB, INR 9,00,000', link: '/account/trips/TP-SECRET1' });
+    const nx = await prisma.notification.findFirstOrThrow({ where: { userId: x.user.id }, include: { deliveries: true }, orderBy: { createdAt: 'desc' } });
+    expect(nx.deliveries.map((d) => d.channel).sort()).toEqual(['EMAIL', 'PUSH']);
+
+    // Same phone signs in as Y: the token moves; X no longer gets pushes on it.
+    await call('devices', { method: 'POST', token: y.token, body: { token, platform: 'ANDROID' } });
+    expect((await prisma.devicePushToken.findUniqueOrThrow({ where: { token } })).userId).toBe(y.user.id);
+    await notify({ userIds: [x.user.id], type: 'booking.confirmed', title: 't', body: 'b' });
+    const nx2 = await prisma.notification.findFirstOrThrow({ where: { userId: x.user.id, type: 'booking.confirmed' }, include: { deliveries: true } });
+    expect(nx2.deliveries.map((d) => d.channel)).toEqual(['EMAIL']);
+
+    expect((await call('devices', { method: 'DELETE', token: x.token, body: { token } })).json.data.revoked).toBe(0);
+    expect((await call('devices', { method: 'DELETE', token: y.token, body: { token } })).json.data.revoked).toBe(1);
+  });
+
+  it('sends generic lock-screen text only, revokes dead tokens, and reports "not configured" without credentials', async () => {
+    const { generateKeyPairSync } = await import('node:crypto');
+    const { deliverPush } = await import('@/server/push/devices');
+    const z = await customer('pz');
+    const good = `fcm-good-${tag}-${'g'.repeat(40)}`;
+    const dead = `fcm-dead-${tag}-${'d'.repeat(40)}`;
+    await call('devices', { method: 'POST', token: z.token, body: { token: good, platform: 'IOS' } });
+    await call('devices', { method: 'POST', token: z.token, body: { token: dead, platform: 'ANDROID' } });
+    const n = { id: 'n1', userId: z.user.id, type: 'rfq.quote_received', link: '/account/trips/TP-SECRET1' };
+
+    delete process.env.FCM_SERVICE_ACCOUNT;
+    expect((await deliverPush(n)).status).toBe('SKIPPED_NOT_CONFIGURED');
+
+    const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+    process.env.FCM_SERVICE_ACCOUNT = Buffer.from(JSON.stringify({ project_id: 'tp-test', client_email: 'push@tp-test.iam.gserviceaccount.com', private_key: privateKey.export({ type: 'pkcs8', format: 'pem' }) })).toString('base64');
+    const sent: { token: string; notification: { title: string; body: string }; data: Record<string, string> }[] = [];
+    const real = globalThis.fetch;
+    globalThis.fetch = (async (url: string, init: RequestInit) => {
+      if (String(url).startsWith('https://oauth2.googleapis.com/token')) {
+        expect(String(init.body)).toContain('grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer');
+        return Response.json({ access_token: 'ya29.test', expires_in: 3600 });
+      }
+      const m = JSON.parse(String(init.body)).message;
+      sent.push(m);
+      if (m.token === dead) return Response.json({ error: { status: 'NOT_FOUND', message: 'Requested entity was not found.', details: [{ errorCode: 'UNREGISTERED' }] } }, { status: 404 });
+      return Response.json({ name: 'projects/tp-test/messages/1' });
+    }) as typeof fetch;
+    try {
+      const r = await deliverPush(n);
+      expect(r.status).toBe('SENT');
+    } finally {
+      globalThis.fetch = real;
+      delete process.env.FCM_SERVICE_ACCOUNT;
+    }
+    expect(sent).toHaveLength(2);
+    for (const m of sent) {
+      expect(m.notification).toEqual({ title: 'ThePrivate', body: 'You have a new offer to review.' });
+      expect(JSON.stringify(m.notification)).not.toMatch(/TP-|BOM|INR/);
+      expect(m.data).toEqual({ notificationId: 'n1', path: '/account/trips/TP-SECRET1' });
+    }
+    expect((await prisma.devicePushToken.findUniqueOrThrow({ where: { token: dead } })).revokedAt).not.toBeNull();
+    expect((await prisma.devicePushToken.findUniqueOrThrow({ where: { token: good } })).revokedAt).toBeNull();
+  });
+});

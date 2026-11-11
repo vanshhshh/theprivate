@@ -248,7 +248,7 @@ The full review is in [MOBILE_SECURITY_REVIEW.md](MOBILE_SECURITY_REVIEW.md) (Ph
 | B5 | Serve `apple-app-site-association` and `assetlinks.json` | Universal Links / App Links | 2 static files; needs your IDs |
 | B6 | A password-reset e-mail through the existing mailer | The app and site need account recovery (none exists today) | Small |
 
-**All of these are built and tested locally first. Nothing is deployed until you approve.**
+**Status 2026-11-11:** B1–B6 are all built and tested locally. B3 adds one additive migration (`20261111081753_mobile_push_devices`), applied to the local databases only. **Nothing is deployed until you approve.**
 
 ## 15. Known risks
 

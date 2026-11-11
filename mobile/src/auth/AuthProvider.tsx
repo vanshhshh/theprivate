@@ -67,6 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    const { disablePush } = await import('@/native/push');
+    await disablePush().catch(() => {});
     const token = await readToken();
     await clearToken();
     setState({ status: 'signed-out' });

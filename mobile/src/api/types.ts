@@ -130,6 +130,7 @@ export interface Profile {
   preferredCurrency: string;
   marketingOptIn: boolean;
   isPartner: boolean;
+  deletionRequestedAt: string | null;
 }
 
 export interface DiscoverResponse { oneWay: OneWay[]; aircraft: Listing[]; nextJourney: RequestSummary | null; unread: number }

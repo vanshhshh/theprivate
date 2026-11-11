@@ -21,6 +21,21 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- App Links: verified against https://theprivate.in/.well-known/assetlinks.json.
+                 Only customer pages; the company workspace, admin and invitations stay in the browser. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="theprivate.in" />
+                <data android:path="/charter" />
+                <data android:pathPrefix="/empty-legs/" />
+                <data android:pathPrefix="/aircraft-for-sale/" />
+                <data android:pathPrefix="/account/trips/" />
+                <data android:pathPrefix="/account/bookings/" />
+                <data android:path="/account/notifications" />
+            </intent-filter>
         </activity>
 
         <provider

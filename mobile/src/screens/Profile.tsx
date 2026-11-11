@@ -1,5 +1,7 @@
 import { Browser } from '@capacitor/browser';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { biometricAvailability, biometricEnabled, setBiometricEnabled } from '@/auth/biometric';
+import { disablePush, enablePush, pushPermission } from '@/native/push';
 import { api, ApiError } from '@/api/client';
 import type { Profile as P } from '@/api/types';
 import { useAuth } from '@/auth/AuthProvider';
@@ -19,6 +21,80 @@ function Row({ label, onClick }: { label: string; onClick: () => void }) {
         {label} <Icon name="chevron-right" className="size-5 text-muted" />
       </button>
     </li>
+  );
+}
+
+/** Face ID / fingerprint lock for this device (only shown where the device supports it). */
+function AppLock() {
+  const [avail, setAvail] = useState<{ available: boolean; label: string } | null>(null);
+  const [on, setOn] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    void biometricAvailability().then(setAvail);
+    void biometricEnabled().then(setOn);
+  }, []);
+  if (!avail?.available) return null;
+  const toggle = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await setBiometricEnabled(!on);
+      setOn(!on);
+    } catch {
+      setError('Not changed: we could not confirm it’s you.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Section title="Security">
+      <div className="flex min-h-14 items-center justify-between gap-4">
+        <div>
+          <p className="text-[15px]">Lock with {avail.label}</p>
+          <p className="text-[12.5px] text-muted">Asked when you open the app and after 5 minutes away.</p>
+        </div>
+        <button type="button" role="switch" aria-checked={on} aria-label={`Lock with ${avail.label}`} disabled={busy} onClick={() => void toggle()} className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${on ? 'bg-verified' : 'bg-line-strong'}`}>
+          <span className={`absolute top-1 size-6 rounded-full bg-paper shadow transition-[left] ${on ? 'left-7' : 'left-1'}`} />
+        </button>
+      </div>
+      {error && <p role="alert" className="mt-2 text-[13px] text-danger">{error}</p>}
+    </Section>
+  );
+}
+
+/** Push on/off for this phone (shown once push is configured for the build). */
+function PushSetting() {
+  const [p, setP] = useState<'granted' | 'denied' | 'prompt' | 'unavailable'>('unavailable');
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    void pushPermission().then(setP);
+  }, []);
+  if (p === 'unavailable') return null;
+  return (
+    <Section title="Notifications">
+      {p === 'denied' ? (
+        <p className="text-[14.5px] leading-relaxed text-ink-2">Notifications are turned off for ThePrivate in your phone’s settings. Turn them on there to hear about offers and trip changes.</p>
+      ) : (
+        <div className="flex min-h-14 items-center justify-between gap-4">
+          <div>
+            <p className="text-[15px]">Offer and trip updates</p>
+            <p className="text-[12.5px] text-muted">Lock-screen messages never show routes or prices.</p>
+          </div>
+          <Button
+            variant="secondary"
+            busy={busy}
+            className="h-11 px-5"
+            onClick={() => {
+              setBusy(true);
+              void (p === 'granted' ? disablePush().then(() => setP('prompt')) : enablePush().then(async () => setP(await pushPermission()))).finally(() => setBusy(false));
+            }}
+          >
+            {p === 'granted' ? 'Turn off' : 'Turn on'}
+          </Button>
+        </div>
+      )}
+    </Section>
   );
 }
 
@@ -64,6 +140,24 @@ export function Profile() {
   const { state, profile, signOut, setProfile } = useAuth();
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [reason, setReason] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [delBusy, setDelBusy] = useState(false);
+  const [delError, setDelError] = useState<ApiError | null>(null);
+
+  const requestDeletion = async () => {
+    setDelBusy(true);
+    setDelError(null);
+    try {
+      await api('/api/mobile/v1/me/deletion', { method: 'POST', body: { confirm: true, reason: reason.trim() || undefined } });
+      setDeleting(false);
+      await signOut(); // the request is recorded; this device is signed out
+    } catch (e) {
+      setDelError(e instanceof ApiError ? e : new ApiError('UNKNOWN', 'Something went wrong.', 0));
+    } finally {
+      setDelBusy(false);
+    }
+  };
 
   return (
     <>
@@ -88,6 +182,8 @@ export function Profile() {
             </dl>
             <Button variant="secondary" className="mt-5 w-full" onClick={() => setEditing(true)}>Edit details</Button>
           </Section>
+          <PushSetting />
+          <AppLock />
           {profile.isPartner && (
             <Section title="Flight partner">
               <p className="text-[14.5px] leading-relaxed text-ink-2">Your company workspace is on the website.</p>
@@ -111,7 +207,11 @@ export function Profile() {
         <Section>
           <div className="flex flex-col gap-3">
             <Button variant="secondary" className="w-full" onClick={() => void signOut()}>Sign out</Button>
-            <Button variant="ghost" className="w-full text-danger decoration-danger/40" onClick={() => setDeleting(true)}>Delete account</Button>
+            {profile.deletionRequestedAt ? (
+              <Notice tone="info">You asked for your account to be deleted on {new Date(profile.deletionRequestedAt).toLocaleDateString()}. Our team will confirm by e-mail once it is complete.</Notice>
+            ) : (
+              <Button variant="ghost" className="w-full text-danger decoration-danger/40" onClick={() => (setDelError(null), setConfirmDelete(false), setDeleting(true))}>Delete account</Button>
+            )}
           </div>
         </Section>
       )}
@@ -124,11 +224,18 @@ export function Profile() {
       )}
       <Sheet open={deleting} title="Delete your account" onClose={() => setDeleting(false)}>
         <p className="text-[15px] leading-relaxed text-ink-2">
-          Your request goes to our team, who will confirm by e-mail before anything is deleted. Some records may need to be kept where the law requires it.
+          Your request goes to our team, who will confirm by e-mail before anything is deleted. Some records may need to be kept where the law requires it. You will be signed out of this device.
         </p>
-        <div className="mt-4"><Notice tone="info">Direct deletion from the app is being connected. For now, the request opens our contact page.</Notice></div>
+        <div className="mt-5">
+          <Field label="Reason (optional)">{(id) => <input id={id} value={reason} maxLength={1000} onChange={(e) => setReason(e.target.value)} className={inputClass} />}</Field>
+        </div>
+        <label className="mt-5 flex min-h-11 items-center gap-3 text-[15px]">
+          <input type="checkbox" checked={confirmDelete} onChange={(e) => setConfirmDelete(e.target.checked)} className="size-5 accent-magenta" />
+          I want my ThePrivate account deleted.
+        </label>
+        {delError && <div className="mt-4"><Notice tone="danger">{delError.message}</Notice></div>}
         <div className="mt-6 flex flex-col gap-3 pb-2">
-          <Button variant="danger" className="w-full" onClick={() => web('/contact?topic=account-deletion')}>Request deletion</Button>
+          <Button variant="danger" busy={delBusy} disabled={!confirmDelete} className="w-full" onClick={() => void requestDeletion()}>Request deletion</Button>
           <Button variant="ghost" className="w-full" onClick={() => setDeleting(false)}>Keep my account</Button>
         </div>
       </Sheet>

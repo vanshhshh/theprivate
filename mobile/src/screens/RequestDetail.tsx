@@ -1,5 +1,6 @@
 import { Haptics, NotificationType } from '@capacitor/haptics';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { enablePush, pushPermission } from '@/native/push';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, ApiError } from '@/api/client';
 import type { Offer, RequestDetail as Detail } from '@/api/types';
@@ -55,6 +56,10 @@ export function RequestDetail() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<ApiError | null>(null);
+  const [askPush, setAskPush] = useState(false);
+  useEffect(() => {
+    if (sp.get('new')) void pushPermission().then((p) => setAskPush(p === 'prompt'));
+  }, [sp]);
 
   const accept = async (o: Offer) => {
     setBusy(true);
@@ -99,6 +104,16 @@ export function RequestDetail() {
       {sp.get('new') && (
         <div className="px-6 pt-4">
           <Notice tone="success">Request received. Licensed partners are being contacted; we’ll notify you when offers arrive. Nothing has been charged.</Notice>
+        </div>
+      )}
+      {askPush && (
+        <div className="mx-6 mt-4 rounded-[18px] bg-night p-5 text-paper">
+          <p className="font-display text-[22px] leading-tight">Get notified when offers arrive</p>
+          <p className="mt-1.5 text-[14px] text-paper/75">We’ll only notify you about your requests, offers and trips.</p>
+          <div className="mt-4 flex gap-3">
+            <Button variant="light" onClick={() => void enablePush().finally(() => setAskPush(false))}>Turn on</Button>
+            <Button variant="ghost" className="text-paper decoration-paper/40" onClick={() => setAskPush(false)}>Not now</Button>
+          </div>
         </div>
       )}
       <section className="px-6 pb-4 pt-5">

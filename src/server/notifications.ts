@@ -16,8 +16,10 @@ interface NotifyInput {
  */
 export async function notify(input: NotifyInput, tx: Tx | typeof prisma = prisma) {
   for (const userId of [...new Set(input.userIds)]) {
+    // Push only for people who have the app and allowed notifications on at least one phone.
+    const hasDevice = (await tx.devicePushToken.count({ where: { userId, revokedAt: null } })) > 0;
     const n = await tx.notification.create({
-      data: { userId, type: input.type, title: input.title, body: input.body, link: input.link, deliveries: { create: { channel: 'EMAIL' } } },
+      data: { userId, type: input.type, title: input.title, body: input.body, link: input.link, deliveries: { create: [{ channel: 'EMAIL' }, ...(hasDevice ? [{ channel: 'PUSH' as const }] : [])] } },
       include: { deliveries: true },
     });
     for (const d of n.deliveries) {

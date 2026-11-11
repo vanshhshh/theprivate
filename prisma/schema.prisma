@@ -133,6 +133,7 @@ model User {
   conflictsResolved DataConflict[]
   matchesReviewed MatchCandidate[]
   importBatches   ImportBatch[]
+  pushDevices     DevicePushToken[]
 }
 
 model Session {
@@ -1249,6 +1250,7 @@ enum DeliveryChannel {
   EMAIL
   SMS
   WHATSAPP
+  PUSH
 }
 
 enum DeliveryStatus {
@@ -1738,4 +1740,31 @@ model OnboardingPaymentEvent {
   payment         OnboardingPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 
   @@index([paymentId, createdAt])
+}
+
+// =============================================================================================
+// Mobile app push notifications
+// =============================================================================================
+
+enum DevicePlatform {
+  IOS
+  ANDROID
+}
+
+/// A phone that may receive push notifications for the signed-in account. A token moves to the
+/// account that most recently registered it (account switching) and is revoked on sign-out or
+/// when the push provider reports it invalid.
+model DevicePushToken {
+  id         String         @id @default(cuid())
+  userId     String
+  token      String         @unique
+  platform   DevicePlatform
+  appVersion String?
+  lastSeenAt DateTime       @default(now()) @db.Timestamptz(3)
+  revokedAt  DateTime?      @db.Timestamptz(3)
+  createdAt  DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime       @updatedAt @db.Timestamptz(3)
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
 }

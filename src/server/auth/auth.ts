@@ -31,6 +31,26 @@ export const auth = betterAuth({
     maxPasswordLength: 128,
     autoSignIn: true,
     requireEmailVerification: emailVerificationRequired(),
+    // Account recovery (website and mobile app). The link is valid for one hour, works once, and
+    // signs the account out everywhere when the password changes.
+    resetPasswordTokenExpiresIn: 60 * 60,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      const first = (user.name ?? '').split(' ')[0] || 'there';
+      await sendEmail({
+        to: user.email,
+        subject: 'Reset your ThePrivate password',
+        text: `Hello ${first},
+
+We received a request to reset the password for your ThePrivate account. Choose a new password here:
+
+${url}
+
+The link works once and expires in one hour. If you did not ask for this, you can ignore this e-mail; your password stays the same.
+
+ThePrivate`,
+      });
+    },
   },
   emailVerification: {
     sendOnSignUp: emailVerificationRequired(),
@@ -68,5 +88,6 @@ ThePrivate`,
   // The mobile app (Capacitor) is served from its own origin and authenticates with
   // `Authorization: Bearer <session token>`; bearer() maps that onto the same Session rows.
   trustedOrigins: MOBILE_APP_ORIGINS,
-  plugins: [nextCookies(), bearer()],
+  // nextCookies() must stay last so cookies set by earlier plugins' hooks reach the response.
+  plugins: [bearer(), nextCookies()],
 });

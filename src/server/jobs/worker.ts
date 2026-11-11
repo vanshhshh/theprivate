@@ -3,6 +3,7 @@ import { emailProvider } from '@/server/integrations/messaging';
 import { invitationSweeps, markInvitationFailed, processInvitationJob } from '@/server/invitations/service';
 import { log } from '@/server/log';
 import { processEmailJob } from '@/server/email/outbox';
+import { deliverPush } from '@/server/push/devices';
 
 /** Claims up to `limit` due jobs atomically (FOR UPDATE SKIP LOCKED: safe with many workers). */
 export async function claimJobs(limit = 10) {
@@ -18,6 +19,12 @@ export async function claimJobs(limit = 10) {
 async function deliverNotification(deliveryId: string) {
   const d = await prisma.notificationDelivery.findUnique({ where: { id: deliveryId }, include: { notification: { include: { user: { select: { email: true } } } } } });
   if (!d || d.status !== 'QUEUED') return;
+  if (d.channel === 'PUSH') {
+    const n = d.notification;
+    const r = await deliverPush({ id: n.id, userId: n.userId, type: n.type, link: n.link });
+    await prisma.notificationDelivery.update({ where: { id: d.id }, data: { status: r.status, providerRef: 'providerRef' in r ? r.providerRef : null, error: 'error' in r ? r.error : null, attempts: { increment: 1 } } });
+    return;
+  }
   if (d.channel !== 'EMAIL') {
     await prisma.notificationDelivery.update({ where: { id: d.id }, data: { status: 'SKIPPED_NOT_CONFIGURED', attempts: { increment: 1 } } });
     return;

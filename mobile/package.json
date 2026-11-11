@@ -17,7 +17,9 @@
     "icons": "node scripts/render-brand-assets.mjs && capacitor-assets generate --android --ios --assetPath resources --iconBackgroundColor \"#0e1418\" --splashBackgroundColor \"#0e1418\" --splashBackgroundColorDark \"#0e1418\""
   },
   "dependencies": {
+    "@aparajita/capacitor-biometric-auth": "^10.0.0",
     "@aparajita/capacitor-secure-storage": "^8.0.1",
+    "@capacitor-firebase/messaging": "^8.6.0",
     "@capacitor/android": "8.6.0",
     "@capacitor/app": "8.1.2",
     "@capacitor/browser": "^8.0.5",

@@ -8,7 +8,7 @@ import { runAction } from '@/server/action';
 import { requireViewer } from '@/server/auth/viewer';
 import { prisma } from '@/server/db/client';
 import { AppError } from '@/server/errors';
-import { saveSettings } from '@/server/services/account';
+import { requestAccountDeletion, saveSettings } from '@/server/services/account';
 import { cancelBooking } from '@/server/services/bookings';
 import { acceptQuote, declineQuote } from '@/server/services/quotes';
 import { cancelRfq } from '@/server/services/rfq';
@@ -69,5 +69,14 @@ export async function listingStatusAction(_: FormState, fd: FormData): Promise<F
   const to = z.enum(['SUBMITTED', 'WITHDRAWN', 'SOLD']).parse(fd.get('to'));
   const res = await runAction(async () => sellerUpdateStatus(await requireViewer(), String(fd.get('id')), to), 'Listing updated.');
   revalidatePath('/account/listings');
+  return res;
+}
+
+export async function requestDeletionAction(_: FormState, fd: FormData): Promise<FormState> {
+  const res = await runAction(async () => {
+    if (fd.get('confirm') !== 'yes') throw new AppError('VALIDATION', 'Please confirm that you want your account deleted.', { confirm: 'Required' });
+    await requestAccountDeletion(await requireViewer(), { reason: String(fd.get('reason') ?? '') || undefined });
+  }, 'Request received. We have e-mailed you a confirmation and will confirm again once your account is deleted.');
+  revalidatePath('/account/settings');
   return res;
 }

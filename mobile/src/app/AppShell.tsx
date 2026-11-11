@@ -5,6 +5,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { Icon, type IconName } from '@/components/Icon';
 import { appPathFor } from '@/lib/links';
 import { useOnline } from '@/lib/network';
+import { PushBridge } from '@/native/push';
 
 const TABS: { to: string; label: string; icon: IconName }[] = [
   { to: '/discover', label: 'Discover', icon: 'horizon' },
@@ -58,6 +59,7 @@ export function AppShell() {
           <Icon name="wifi-off" className="size-4" /> You’re offline. Showing what’s saved on this phone.
         </div>
       )}
+      <PushBridge />
       <main ref={main} className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain" style={{ paddingBottom: showTabs ? 'calc(var(--tabbar-h) + var(--safe-bottom))' : 'var(--safe-bottom)' }}>
         <Outlet />
       </main>

@@ -38,7 +38,6 @@ Updated after every phase. Legend: ✅ done · 🔄 in progress · ⬜ not start
 - ✅ Journeys (grouped) · Request detail with offer comparison and a confirmation sheet for acceptance · Decline / cancel · Booking detail (local times, true payment state)
 - ✅ Explore: one-way offers and aircraft for sale, details, enquiries, share (public URLs only)
 - ✅ Inbox (web links mapped to app screens) · Profile (edit, sign out, partner workspace link) · Android back button · deep-link router
-- ⬜ B4 account deletion endpoint: the app currently routes the request to the contact page (stated plainly)
 - ✅ End-to-end in a phone viewport against the local backend (test database): browse → search → sign up → submit request TP-22RYY8 (7 partners contacted) → Journeys → Inbox → Profile, with **0 console or server errors**
 - Fixed during testing:
   - Chromium's `scrollTo()` Promise crashed screen changes;
@@ -46,12 +45,26 @@ Updated after every phase. Legend: ✅ done · 🔄 in progress · ⬜ not start
   - a redirect after submission;
   - the absolute `callbackURL` was rejected.
 
-## Phase 6: Native capabilities
-- ⬜ Secure storage (Keychain / Keystore)
-- ⬜ Biometric lock
-- ⛔ Push: B3 is built locally; the end-to-end test needs a Firebase project and APNs key
-- ⛔ Universal Links / App Links: B5 needs the Apple Team ID and the Play signing SHA-256
-- ⬜ Document and camera upload · Share · Network status · Lifecycle
+## Phase 6: Native capabilities — 2026-11-11 ([MOBILE_NATIVE_FEATURES.md](MOBILE_NATIVE_FEATURES.md))
+- ✅ Secure storage: Keychain (this device only, no iCloud sync) / Keystore; excluded from backups
+- ✅ Biometric lock: opt-in with one successful scan; locks on a cold start and after 5 minutes away; passcode fallback; "Sign out instead"
+- ✅ B4 account deletion: website Settings + app Profile; staff queue, e-mail confirmation, audit, idempotent (tested)
+- ✅ B6 password reset: one-hour single-use link, signs out everywhere, never reveals whether an account exists; website pages plus an app sheet (tested)
+- ✅ B3 push, backend:
+  - `DevicePushToken` and the `PUSH` channel (additive migration, **local databases only**);
+  - FCM HTTP v1 sender;
+  - generic lock-screen text;
+  - dead tokens revoked;
+  - account switching (tested with simulated FCM).
+- ✅ Push, app: permission asked at the point of use; token registration; tap → screen; unregistered on sign-out
+  - ⛔ The live test needs a Firebase project, the APNs key and `VITE_PUSH_ENABLED=true`
+- ✅ B5 app links: `.well-known` files from environment variables (404 until set); Android `autoVerify` filter; strict in-app allowlist
+  - ⛔ The live test needs `APPLE_TEAM_ID` (plus iOS Associated Domains) and `ANDROID_CERT_SHA256`
+- ✅ Share (public URLs only) · Network status · Android back · Haptics · Lifecycle (lock on resume)
+- ⬜ Camera / document upload: not built. There is no customer document feature on the website; proposed as a later backend capability.
+- ✅ Debug APK with all 12 native plugins (14.2 MB), built without Firebase files
+- ✅ Browser walkthrough extended to deletion and password reset: 0 errors
+- Fixed during testing: the Better Auth plugin order (`nextCookies()` must be last, which affects production cookie handling)
 
 ## Phase 7: Security and performance
 - ⬜ MOBILE_SECURITY_REVIEW.md · bundle secret scan · backup exclusion · motion tiers
