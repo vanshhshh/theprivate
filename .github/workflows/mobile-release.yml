@@ -26,13 +26,13 @@ jobs:
     environment: mobile-release
     defaults: { run: { working-directory: mobile } }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check secrets
         env: { K: '${{ secrets.TP_UPLOAD_KEYSTORE_B64 }}' }
         run: test -n "$K" || { echo "::error::Android signing secrets are not configured"; exit 1; }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: { node-version: 24, cache: npm, cache-dependency-path: mobile/package-lock.json }
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: 21 }
       - run: npm ci
       - name: Firebase config and upload key (from secrets)
@@ -58,11 +58,11 @@ jobs:
     environment: mobile-release
     defaults: { run: { working-directory: mobile } }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check secrets
         env: { K: '${{ secrets.ASC_KEY_P8_B64 }}' }
         run: test -n "$K" || { echo "::error::App Store Connect API key is not configured (needs a paid Apple Developer Program membership)"; exit 1; }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: { node-version: 24, cache: npm, cache-dependency-path: mobile/package-lock.json }
       - run: npm ci
       - run: VITE_PUSH_ENABLED=true npm run build && npx cap sync ios
