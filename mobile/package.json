@@ -14,7 +14,9 @@
     "cap:sync": "cap sync",
     "android:debug": "npm run build:dev && cap sync android && cd android && gradlew.bat assembleDebug",
     "android:open": "cap open android",
-    "icons": "node scripts/render-brand-assets.mjs && capacitor-assets generate --android --ios --assetPath resources --iconBackgroundColor \"#0e1418\" --splashBackgroundColor \"#0e1418\" --splashBackgroundColorDark \"#0e1418\""
+    "icons": "node scripts/render-brand-assets.mjs && capacitor-assets generate --android --ios --assetPath resources --iconBackgroundColor \"#0e1418\" --splashBackgroundColor \"#0e1418\" --splashBackgroundColorDark \"#0e1418\"",
+    "android:local": "npm run assets:sync && tsc --noEmit && vite build --mode development && node scripts/cap-local-sync.mjs && cd android && gradlew.bat assembleDebug",
+    "firebase:check": "node scripts/firebase-setup.mjs check"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",

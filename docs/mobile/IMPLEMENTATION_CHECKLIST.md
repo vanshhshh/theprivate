@@ -57,7 +57,10 @@ Updated after every phase. Legend: ✅ done · 🔄 in progress · ⬜ not start
   - dead tokens revoked;
   - account switching (tested with simulated FCM).
 - ✅ Push, app: permission asked at the point of use; token registration; tap → screen; unregistered on sign-out
-  - ⛔ The live test needs a Firebase project, the APNs key and `VITE_PUSH_ENABLED=true`
+  - ✅ **Android verified end to end with real Firebase** (project `theprivate-app`, apps registered by script): opt-in → OS dialog → registered → push SENT → generic text shown → tap opens the request
+  - Fixed: a token was registered before permission was granted
+  - ⛔ iOS push: an APNs key (Apple account) and a Mac to add `GoogleService-Info.plist` to the Xcode target
+  - ⛔ Production push: `FCM_SERVICE_ACCOUNT` in Vercel (with the backend deployment approval)
 - ✅ B5 app links: `.well-known` files from environment variables (404 until set); Android `autoVerify` filter; strict in-app allowlist
   - ⛔ The live test needs `APPLE_TEAM_ID` (plus iOS Associated Domains) and `ANDROID_CERT_SHA256`
 - ✅ Share (public URLs only) · Network status · Android back · Haptics · Lifecycle (lock on resume)

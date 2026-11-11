@@ -13,9 +13,12 @@ const config: CapacitorConfig = {
   server: { androidScheme: 'https', iosScheme: 'capacitor' },
   backgroundColor: '#0e1418',
   android: {
-    allowMixedContent: false,
+    // Local test builds only (CAP_LOCAL_DEV=1 npx cap sync android): lets the https://localhost app
+    // reach the plain-HTTP development backend on the host (10.0.2.2) and enables WebView debugging.
+    // Release builds are synced without it: no mixed content, no debugging.
+    allowMixedContent: process.env.CAP_LOCAL_DEV === '1',
     captureInput: true,
-    webContentsDebuggingEnabled: false,
+    webContentsDebuggingEnabled: process.env.CAP_LOCAL_DEV === '1',
   },
   ios: {
     contentInset: 'never',

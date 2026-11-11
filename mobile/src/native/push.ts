@@ -67,7 +67,13 @@ export function PushBridge() {
       if (p === 'granted') void register().catch(() => {});
     });
     const subs = [
-      FirebaseMessaging.addListener('tokenReceived', () => void register().catch(() => {})),
+      // Firebase issues a token at start-up whether or not notifications are allowed: only register
+      // it once the customer has granted permission.
+      FirebaseMessaging.addListener('tokenReceived', () => {
+        void pushPermission().then((p) => {
+          if (p === 'granted') void register().catch(() => {});
+        });
+      }),
       FirebaseMessaging.addListener('notificationActionPerformed', (e) => {
         const path = (e.notification.data as Record<string, string> | undefined)?.path;
         const target = path ? appPathFor(path) : null;
