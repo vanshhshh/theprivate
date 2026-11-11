@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+﻿import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Capacitor plugins have no native side in unit tests.
 vi.mock('@capacitor/preferences', () => ({ Preferences: { get: async () => ({ value: null }), set: async () => {}, remove: async () => {} } }));
@@ -125,5 +125,23 @@ describe('API client', () => {
     respond(() => Response.json({ data: 1 }));
     await api('/api/mobile/v1/discover');
     expect((calls.at(-1)!.init.headers as Record<string, string>).Authorization).toBeUndefined();
+  });
+});
+
+describe('money and time formatting', () => {
+  it('formats money in its own currency, never converted', async () => {
+    const { money } = await import('@/lib/format');
+    expect(money('113400', 'INR')).toMatch(/1,13,400|113,400/);
+    expect(money('500000', 'USD', { compact: true })).toMatch(/5,00,000|500,000/); // device locale decides grouping
+    expect(money('1234.5', 'AED')).toMatch(/1,234\.50/);
+    expect(money('not-a-number', 'EUR')).toBe('EUR not-a-number');
+  });
+});
+
+describe('release hardening', () => {
+  it('pins release builds to production and refuses insecure preview URLs', async () => {
+    const src = (await import('node:fs')).readFileSync(new URL('../src/config/env.ts', import.meta.url), 'utf8');
+    expect(src).toMatch(/mode === 'production'[\s\S]*apiBaseUrl: PRODUCTION_API/);
+    expect(src).toMatch(/Preview builds need VITE_API_BASE_URL=https/);
   });
 });

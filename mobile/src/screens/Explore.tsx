@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { apiUrl } from '@/api/client';
 import type { Listing, OneWay, Page } from '@/api/types';
@@ -29,13 +30,14 @@ export function OneWayRow({ l }: { l: OneWay }) {
 }
 
 export function ListingCard({ l }: { l: Listing }) {
-  const photo = l.photos[0];
+  const [broken, setBroken] = useState(false);
+  const photo = broken ? undefined : l.photos[0];
   return (
     <li>
       <Link to={`/explore/aircraft/${l.id}`} className="block border-b border-line py-5">
         <div className="relative aspect-[16/10] overflow-hidden rounded-[18px] bg-night">
           {photo ? (
-            <img src={apiUrl(photo.url)} alt={photo.caption ?? l.headline} loading="lazy" decoding="async" className="size-full object-cover" />
+            <img src={apiUrl(photo.url)} alt={photo.caption ?? l.headline} loading="lazy" decoding="async" onError={() => setBroken(true)} className="size-full object-cover" />
           ) : (
             <div className="grid size-full place-items-center text-[13px] text-paper/50">Photos on request</div>
           )}

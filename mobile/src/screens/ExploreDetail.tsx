@@ -142,7 +142,15 @@ export function AircraftDetail() {
       {data.photos.length > 0 && (
         <div className="flex snap-x snap-mandatory overflow-x-auto bg-night [scrollbar-width:none]">
           {data.photos.map((p, i) => (
-            <img key={i} src={apiUrl(p.url)} alt={p.caption ?? data.headline} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" className="aspect-[4/3] w-full shrink-0 snap-center object-cover" />
+            <img
+              key={i}
+              src={apiUrl(p.url)}
+              alt={p.caption ?? data.headline}
+              loading={i === 0 ? 'eager' : 'lazy'}
+              decoding="async"
+              onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+              className="aspect-[4/3] w-full shrink-0 snap-center object-cover"
+            />
           ))}
         </div>
       )}

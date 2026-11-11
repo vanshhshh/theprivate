@@ -132,7 +132,7 @@ export function RequestDetail() {
         ))}
         <p className="mt-3 text-[14px] text-ink-2">
           {data.passengers} passengers{data.category ? ` · ${data.category.label}` : ''}
-          {data.partnersContacted > 0 ? ` · ${data.partnersContacted} partners contacted` : ''}
+          {data.partnersContacted > 0 ? ` · ${data.partnersContacted} ${data.partnersContacted === 1 ? 'partner' : 'partners'} contacted` : ''}
         </p>
       </section>
 

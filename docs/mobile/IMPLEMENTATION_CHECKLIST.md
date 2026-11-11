@@ -69,20 +69,37 @@ Updated after every phase. Legend: ✅ done · 🔄 in progress · ⬜ not start
 - ✅ Browser walkthrough extended to deletion and password reset: 0 errors
 - Fixed during testing: the Better Auth plugin order (`nextCookies()` must be last, which affects production cookie handling)
 
-## Phase 7: Security and performance
-- ⬜ MOBILE_SECURITY_REVIEW.md · bundle secret scan · backup exclusion · motion tiers
+## Phase 7: Security and performance — 2026-11-11
+- ✅ [MOBILE_SECURITY_REVIEW.md](MOBILE_SECURITY_REVIEW.md): secrets, sessions, API, device, data inventory
+- ✅ The release build fails on secrets or development hosts; release CSP is production only; no source maps
+- ✅ Release manifest audited: only the launcher activity is exported; minimal permissions
+- ✅ Performance: start-up JS 414 → 375 KB (routes split); fonts trimmed to the subsets used, with the real italic added
+- ✅ A friendly error screen instead of the router's developer page; iOS app-bound domains deferred until an iPhone test
 
-## Phase 8: Testing
-- ⬜ Unit tests (API client, auth, planner validation, deep-link router)
-- ⬜ Mobile API integration tests (test database)
-- ⬜ Emulator end-to-end journeys
-- ⛔ Real devices: none connected
+## Phase 8: Test and refine — 2026-11-11 ([MOBILE_TEST_PLAN.md](MOBILE_TEST_PLAN.md), [MOBILE_TEST_REPORT.md](MOBILE_TEST_REPORT.md))
+- ✅ Website 122/122 + 24/24 e2e; app 12/12; walkthrough with 0 errors; Android push verified on a device
+- ✅ 12 defects found and fixed (listed in the report)
+- ⛔ Real phones: none available
 
-## Phases 9–12: Release
-- ⛔ Signed AAB: needs a Play Console account and keystore approval
-- ⛔ Signed IPA: needs an Apple Developer account and a Mac or CI
-- ⛔ TestFlight / Play internal testing
-- ⬜ Store listings, privacy declarations, review notes (drafts)
+## Phase 9: Android release preparation
+- ✅ Upload key generated (git-ignored; **back it up**); signed AAB and APK 0.1.0 (1), verified
+- ✅ [GOOGLE_PLAY_SUBMISSION.md](GOOGLE_PLAY_SUBMISSION.md): listing, data safety, content rating, tracks
+- ✅ `/delete-account` public page (Play requirement), website, local
+- ⛔ Upload: needs a Play Console account and the backend deployed
+
+## Phase 10: iOS release preparation
+- ✅ Team ID set; [APP_STORE_SUBMISSION.md](APP_STORE_SUBMISSION.md): listing, privacy label, review notes, privacy addendum draft
+- ✅ `mobile-release.yml` iOS job (macOS runner, API-key signing, TestFlight upload)
+- ⛔ Paid membership, APNs key, App Store Connect API key, app record, Mac build
+
+## Phase 11: Internal testing
+- ✅ CI: `mobile.yml` (checks + debug APK artefact); `mobile-release.yml` (signed builds, manual)
+- ⛔ Play internal testing / TestFlight: store accounts. Tester APK: works once the backend is deployed.
+
+## Phase 12: Public release readiness
+- ✅ Store screenshots (Play 1080×1920 ×6, iPhone 1290×2796 ×6), feature graphic, listing text, privacy answers
+- ✅ [MOBILE_RELEASE_CHECKLIST.md](MOBILE_RELEASE_CHECKLIST.md), [MOBILE_ROADMAP.md](MOBILE_ROADMAP.md), [RELEASE_NOTES.md](RELEASE_NOTES.md)
+- ⛔ Submission: your accounts and explicit approval
 
 ## Production changes awaiting approval
-None deployed. B1–B6 are listed in MOBILE_ARCHITECTURE.md §14.
+None deployed. B1–B6, the push migration, `/delete-account` and the `/api/files` 404 fix are all local; see MOBILE_RELEASE_CHECKLIST.md.

@@ -23,7 +23,8 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'never',
     backgroundColor: '#0e1418',
-    limitsNavigationsToAppBoundDomains: true,
+    // Re-enable with a WKAppBoundDomains list once it can be verified on an iPhone (see IOS_SETUP.md).
+    limitsNavigationsToAppBoundDomains: false,
   },
   plugins: {
     SplashScreen: {

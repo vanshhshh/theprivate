@@ -37,7 +37,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (!allowed) return new NextResponse('Not found', { status: 404 });
   }
 
-  const bytes = await readStored(doc.storageKey);
+  let bytes: Uint8Array;
+  try {
+    bytes = await readStored(doc.storageKey);
+  } catch (err) {
+    // A record whose stored file is gone (e.g. storage moved or cleaned up) is "not found", not a crash.
+    if ((err as NodeJS.ErrnoException)?.code === 'ENOENT' || (err as { name?: string })?.name === 'NoSuchKey') return new NextResponse('Not found', { status: 404 });
+    throw err;
+  }
   return new NextResponse(Buffer.from(bytes), {
     headers: {
       'Content-Type': doc.mimeType,

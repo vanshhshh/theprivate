@@ -1,0 +1,44 @@
+# Mobile app checks: typecheck, unit tests, release web bundle (with the secret/dev-host scan) and
+# an Android debug build. Runs only when the app changes. Never deploys anything.
+name: mobile
+on:
+  push:
+    paths: ['mobile/**', '.github/workflows/mobile.yml']
+  pull_request:
+    paths: ['mobile/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: mobile } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: mobile/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Release web bundle (fails on secrets or development hosts)
+        run: npm run build
+  android:
+    needs: checks
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: mobile } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: mobile/package-lock.json }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - run: npm ci
+      - run: npm run build:dev && npx cap sync android
+      - name: Debug APK
+        working-directory: mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with: { name: theprivate-debug-apk, path: mobile/android/app/build/outputs/apk/debug/app-debug.apk, retention-days: 14 }
