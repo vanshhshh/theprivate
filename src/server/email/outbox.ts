@@ -1,4 +1,5 @@
 import 'server-only';
+import { kickQueue } from '@/server/jobs/kick';
 import { Prisma } from '@/generated/prisma/client';
 import { prisma, type Tx } from '@/server/db/client';
 import { log } from '@/server/log';
@@ -18,6 +19,7 @@ export interface QueuedEmail {
 export async function enqueueEmail(tx: Tx | typeof prisma, msg: QueuedEmail, dedupeKey: string) {
   try {
     await tx.job.create({ data: { type: 'email.send', payload: msg as never, dedupeKey: `email:${dedupeKey}`, maxAttempts: 5 } });
+    kickQueue();
     return true;
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') return false; // already queued

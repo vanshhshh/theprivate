@@ -1,5 +1,6 @@
 import 'server-only';
 import { prisma, type Tx } from '@/server/db/client';
+import { kickQueue } from '@/server/jobs/kick';
 
 interface NotifyInput {
   userIds: string[];
@@ -26,6 +27,8 @@ export async function notify(input: NotifyInput, tx: Tx | typeof prisma = prisma
       await tx.job.create({ data: { type: 'notification.deliver', payload: { deliveryId: d.id }, dedupeKey: `deliver:${d.id}` } });
     }
   }
+  // Deliver as soon as this request has responded (and its transaction has committed).
+  kickQueue();
 }
 
 /** Active members of an operator, optionally limited to roles (used to address notifications). */
