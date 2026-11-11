@@ -2,15 +2,20 @@
 
 ✅ done · ⬜ to do · ⛔ blocked on an input from you
 
-## Backend (production): needs your approval
-- ⬜ Apply migration `20261111081753_mobile_push_devices` to Neon. It is additive: one table, one enum value.
-- ⬜ Push the local commits to `main`. That deploys B1–B6, the mobile API, password reset, the deletion page and the app-link routes.
-- ⬜ Vercel variables:
-  - `FCM_SERVICE_ACCOUNT` (from a **rotated** key);
-  - `APPLE_TEAM_ID=3J5MTMY4J8` (only once the paid membership exists);
+## Backend (production): deployed 2026-11-11
+- ✅ Migration `20261111081753_mobile_push_devices` applied to Neon (by you)
+- ✅ Deployed `11510f1` to theprivate.in: the mobile API, password reset, `/delete-account`, the app-link routes and the `/api/files` 404 fix
+- ✅ Smoke test:
+  - public endpoints 200; private 401 without a session;
+  - CORS allows only the app origin;
+  - `.well-known` 404 until configured (intended).
+- ✅ **The signed release APK against production on the emulator:** live airport search, sign-in with the demo account, Profile loads live
+- ✅ Store-review demo account `app-review@theprivate.in` (password in your local `.env` as `DEMO_REVIEW_PASSWORD`; customer only, no staff role)
+- ⬜ **`FCM_SERVICE_ACCOUNT` in Vercel (production):** blocked for me by the permission system; **you add it** (steps in the final report). Until then, live push deliveries are recorded as "not configured".
+- ⬜ **Queue pace:** push and e-mail deliveries run through the job queue. Vercel's daily cron alone means up to a day's delay. Add GitHub secrets `APP_URL` and `CRON_SECRET` to switch on the 5-minute worker.
+- ⬜ Later:
+  - `APPLE_TEAM_ID=3J5MTMY4J8` (once the Apple membership is paid);
   - `ANDROID_CERT_SHA256` (after the first Play upload).
-- ⬜ A smoke test against production: `/api/mobile/v1/discover` 200, sign-in from the app, a request, a push.
-- ⬜ Create the store-review demo account on production.
 
 ## Security
 - ⬜ Rotate the Firebase service-account key (it was shared in chat).

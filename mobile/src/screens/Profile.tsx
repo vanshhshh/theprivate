@@ -84,7 +84,7 @@ function PushSetting() {
           <Button
             variant="secondary"
             busy={busy}
-            className="h-11 px-5"
+            className="h-11 shrink-0 whitespace-nowrap px-5"
             onClick={() => {
               setBusy(true);
               void (p === 'granted' ? disablePush().then(() => setP('prompt')) : enablePush().then(async () => setP(await pushPermission()))).finally(() => setBusy(false));

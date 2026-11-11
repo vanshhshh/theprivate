@@ -46,3 +46,18 @@ Final run: 2026-11-11, commit after Phase 12. All runs are local; production was
 ## Environment notes
 - The PC's drive-letter casing (`c:` vs `C:`) makes Vitest load two module copies. Run tests from `C:\…`.
 - Emulator: start with `-memory 1024` (or 1536) and close other applications; 7.8 GB of RAM is the limit.
+
+## Production verification (2026-11-11, after deployment)
+| Check | Result |
+|---|---|
+| `GET /api/mobile/v1/airports`, `/discover`, `/one-way`, `/aircraft` | ✅ 200 (production holds no live offers or listings yet; the app shows its honest empty states) |
+| `/requests`, `/me` without a session | ✅ 401 |
+| CORS preflight from `https://localhost` (including the `X-Client-Version` header) | ✅ 204 with the app origin; foreign origins get no CORS headers |
+| `/delete-account`, `/forgot-password`, `/reset-password` | ✅ 200 |
+| `/.well-known/*` | ✅ 404 until the store identities are configured (intended) |
+| Demo account through the app's path (sign-in with the app origin → `set-auth-token` → `/me` → sign-out) | ✅ |
+| **Signed release APK on the emulator against theprivate.in** | ✅ Live airport search (DXB, DWC, NHD…), sign-in with the demo account, Profile loaded live |
+| Live push on production | ⏸ Waits for `FCM_SERVICE_ACCOUNT` in Vercel (verified end to end against the local backend earlier) |
+
+**Found in this pass:** the "Turn on" notifications button wrapped onto two lines; fixed, and the release was rebuilt and re-verified.
+**Not a defect:** the first release-app attempt reported "No connection" because the emulator's network was not ready yet after boot. The same bundle then reached production normally.

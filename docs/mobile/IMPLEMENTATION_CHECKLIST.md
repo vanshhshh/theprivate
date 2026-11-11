@@ -102,4 +102,4 @@ Updated after every phase. Legend: ✅ done · 🔄 in progress · ⬜ not start
 - ⛔ Submission: your accounts and explicit approval
 
 ## Production changes awaiting approval
-None deployed. B1–B6, the push migration, `/delete-account` and the `/api/files` 404 fix are all local; see MOBILE_RELEASE_CHECKLIST.md.
+**Deployed 2026-11-11 with your approval:** the push migration (applied by you), then commit `11510f1` on theprivate.in (B1–B6, the mobile API, `/delete-account`, the `/api/files` fix). The signed release app was verified against production. **Still to add:** `FCM_SERVICE_ACCOUNT` in Vercel (you), and the GitHub queue secrets. See MOBILE_RELEASE_CHECKLIST.md.
