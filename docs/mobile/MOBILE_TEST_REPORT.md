@@ -57,7 +57,11 @@ Final run: 2026-11-11, commit after Phase 12. All runs are local; production was
 | `/.well-known/*` | ✅ 404 until the store identities are configured (intended) |
 | Demo account through the app's path (sign-in with the app origin → `set-auth-token` → `/me` → sign-out) | ✅ |
 | **Signed release APK on the emulator against theprivate.in** | ✅ Live airport search (DXB, DWC, NHD…), sign-in with the demo account, Profile loaded live |
-| Live push on production | ⏸ Waits for `FCM_SERVICE_ACCOUNT` in Vercel (verified end to end against the local backend earlier) |
+| Live push on production | ✅ The demo account's release app registered on production. The production queue sent through FCM (`SENT`, message id recorded), and the phone received it (Firebase log). |
 
 **Found in this pass:** the "Turn on" notifications button wrapped onto two lines; fixed, and the release was rebuilt and re-verified.
 **Not a defect:** the first release-app attempt reported "No connection" because the emulator's network was not ready yet after boot. The same bundle then reached production normally.
+
+**Found after the production push test (fixed):**
+- **Queue latency:** GitHub's `*/5` schedule ran only every few hours on this repository, so pushes and e-mails could wait hours. `notify()` and `enqueueEmail()` now deliver right after the request through `after()`; the cron and Actions runs remain as a safety net.
+- **Foreground pushes:** Android and iOS show no system notification for the app that is open, so a customer using the app saw nothing. The app now shows an in-app banner with the same generic text and a "View" button.

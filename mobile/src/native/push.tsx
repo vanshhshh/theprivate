@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { FirebaseMessaging } from '@capacitor-firebase/messaging';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { api } from '@/api/client';
 import { useAuth } from '@/auth/AuthProvider';
@@ -60,6 +60,8 @@ export function PushBridge() {
   const { state } = useAuth();
   const navigate = useNavigate();
   const signedIn = state.status === 'signed-in';
+  // Android and iOS do not show a system notification for the app that is open, so show our own.
+  const [banner, setBanner] = useState<{ body: string; target: string } | null>(null);
 
   useEffect(() => {
     if (!pushConfigured() || !signedIn) return;
@@ -79,11 +81,41 @@ export function PushBridge() {
         const target = path ? appPathFor(path) : null;
         navigate(target ?? '/inbox');
       }),
+      FirebaseMessaging.addListener('notificationReceived', (e) => {
+        const path = (e.notification.data as Record<string, string> | undefined)?.path;
+        setBanner({ body: e.notification.body ?? 'You have a new update.', target: (path && appPathFor(path)) || '/inbox' });
+      }),
     ];
     return () => {
       subs.forEach((s) => void s.then((h) => h.remove()));
     };
   }, [signedIn, navigate]);
 
-  return null;
+  useEffect(() => {
+    if (!banner) return;
+    const t = setTimeout(() => setBanner(null), 8000);
+    return () => clearTimeout(t);
+  }, [banner]);
+
+  if (!banner) return null;
+  return (
+    <div role="status" className="fixed inset-x-3 z-[70] animate-rise" style={{ top: 'calc(var(--safe-top) + 8px)' }}>
+      <div className="flex items-center gap-3 rounded-[18px] bg-night/95 px-4 py-3 text-paper shadow-2xl backdrop-blur-xl">
+        <p className="min-w-0 flex-1 text-[14px] leading-snug">{banner.body}</p>
+        <button
+          type="button"
+          onClick={() => {
+            navigate(banner.target);
+            setBanner(null);
+          }}
+          className="h-10 shrink-0 rounded-full bg-paper px-4 text-[13.5px] font-medium text-ink"
+        >
+          View
+        </button>
+        <button type="button" aria-label="Dismiss" onClick={() => setBanner(null)} className="grid size-10 shrink-0 place-items-center text-paper/60">
+          ×
+        </button>
+      </div>
+    </div>
+  );
 }
