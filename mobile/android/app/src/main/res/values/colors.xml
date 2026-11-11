@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mirrors the brand tokens in src/app/globals.css. -->
+<resources>
+    <color name="tp_night">#0E1418</color>
+    <color name="tp_paper">#F3F0E8</color>
+    <color name="tp_magenta">#A3245C</color>
+</resources>

@@ -1,0 +1,91 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/newsreader';
+@import '@fontsource-variable/instrument-sans';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+/*
+ * Mirrors the website's @theme in src/app/globals.css (one brand, one palette). Keep the two in
+ * step; mobile/tests/tokens.test.ts fails if a shared token drifts.
+ */
+@theme {
+  --color-paper: #f3f0e8;
+  --color-paper-2: #ebe7dc;
+  --color-paper-3: #e1dccf;
+  --color-ink: #111518;
+  --color-ink-2: #2b3137;
+  --color-muted: #646a71;
+  --color-line: #d6d0c2;
+  --color-line-strong: #b9b2a2;
+  --color-sectional: #1f3b57;
+  --color-sectional-2: #2e5578;
+  --color-magenta: #a3245c;
+  --color-magenta-2: #8a1d4d;
+  --color-night: #0e1418;
+  --color-night-2: #172128;
+  --color-night-line: #26323b;
+  --color-dusk: #e2b07a;
+  --color-haze: #c8d3dc;
+
+  --color-verified: #2f6f52;
+  --color-verified-bg: #e3eee7;
+  --color-indicative: #9a6412;
+  --color-indicative-bg: #f4e9d3;
+  --color-unconfirmed: #5d646b;
+  --color-unconfirmed-bg: #e4e2dc;
+  --color-danger: #a33a2c;
+  --color-danger-bg: #f5e1dd;
+
+  --font-display: 'Newsreader Variable', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  --ease-climb: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-approach: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --animate-rise: rise 0.42s var(--ease-climb) both;
+  @keyframes drift {
+    from { transform: scale(1.08); }
+    to { transform: scale(1); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+:root {
+  color-scheme: light;
+  /* Native safe areas (notch, home indicator, Android gesture bar). */
+  /* Android: Capacitor's SystemBars injects --safe-area-inset-*; iOS: WebKit's env(). */
+  --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --tabbar-h: 64px;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-night);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+input, textarea, [contenteditable] {
+  user-select: text;
+}
+
+.font-display { font-family: var(--font-display); }
+.strip { font-family: var(--font-mono); letter-spacing: 0.04em; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

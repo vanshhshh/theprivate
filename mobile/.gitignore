@@ -1,0 +1,16 @@
+node_modules/
+dist/
+# Synced from ../public/media at build time (the website is the source of truth).
+public/media/
+.env*.local
+
+# Signing material: never commit.
+*.jks
+*.keystore
+*.p12
+*.mobileprovision
+*.p8
+keystore.properties
+signing/
+google-services.json
+GoogleService-Info.plist

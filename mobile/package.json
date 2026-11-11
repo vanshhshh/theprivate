@@ -1,0 +1,49 @@
+{
+  "name": "theprivate-mobile",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "ThePrivate customer app for iOS and Android (Capacitor 8). Uses the existing theprivate.in backend.",
+  "scripts": {
+    "assets:sync": "node scripts/sync-assets.mjs",
+    "dev": "npm run assets:sync && vite",
+    "build": "npm run assets:sync && tsc --noEmit && vite build",
+    "build:dev": "npm run assets:sync && tsc --noEmit && vite build --mode development",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "cap:sync": "cap sync",
+    "android:debug": "npm run build:dev && cap sync android && cd android && gradlew.bat assembleDebug",
+    "android:open": "cap open android",
+    "icons": "node scripts/render-brand-assets.mjs && capacitor-assets generate --android --ios --assetPath resources --iconBackgroundColor \"#0e1418\" --splashBackgroundColor \"#0e1418\" --splashBackgroundColorDark \"#0e1418\""
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/ios": "8.6.0",
+    "@capacitor/keyboard": "8.0.6",
+    "@capacitor/network": "8.0.1",
+    "@capacitor/splash-screen": "8.0.2",
+    "@capacitor/status-bar": "8.0.4",
+    "@fontsource-variable/instrument-sans": "5.3.0",
+    "@fontsource-variable/newsreader": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router": "7.18.5",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "4.0.0",
+    "@capacitor/cli": "8.6.0",
+    "@tailwindcss/vite": "4.3.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "tailwindcss": "4.3.4",
+    "typescript": "6.0.3",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  }
+}

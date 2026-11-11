@@ -45,6 +45,7 @@
   ],
   "exclude": [
     "node_modules",
-    "ThePrivate_Aviation_Database_Bundle"
+    "ThePrivate_Aviation_Database_Bundle",
+    "mobile"
   ]
 }
